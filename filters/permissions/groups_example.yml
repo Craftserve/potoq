@@ -1,0 +1,7 @@
+default:
+  tabcomplete.enable: true
+  cloudychat.msg.use: true
+  cloudychat.reply.use: true
+helper:
+  cloudybans.kick: true
+  cloudybans.baninfo: true
