@@ -44,7 +44,10 @@ func RegisterFilters(a radix.Client) {
 	log.AddFilter("file", l4g.DEBUG, writer)
 
 	supervisor_log = make(l4g.Logger)
-	_ = os.Mkdir("supervisor", 0700)
+	err = os.Mkdir("supervisor", 0700)
+	if err != nil {
+		panic("Unable to create supervisor directory: " + err.Error())
+	}
 	writer2 := l4g.NewFileLogWriter("supervisor/supervisor.log", true)
 	writer2.SetFormat("[%D %T] [%L] %M")
 	// writer2.SetRotateDaily(true)
