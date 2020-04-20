@@ -302,7 +302,7 @@ func (handler *Handler) handlePacket(packet packets.Packet, direction packets.Di
 
 func (handler *Handler) handleProxy() (err error) {
 	if handler.Handshake.Protocol != packets.ProtocolVersion {
-		kick := packets.NewLoginKick(&packets.ChatMessage{Text: "Server version: 1.15.2"}) // ta wersja nie powinna byc tu na sztywno
+		kick := packets.NewLoginKick(&packets.ChatMessage{Text: "Server version:" + packets.GameVersion.Name}) // ta wersja nie powinna byc tu na sztywno
 		return handler.DownstreamW.WritePacket(kick, true)
 	}
 

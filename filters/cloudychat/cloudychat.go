@@ -25,7 +25,6 @@ var globalChatLimiter *rate.Limiter
 var log l4g.Logger
 var supervisor_log l4g.Logger
 var redis radix.Client
-var GameVersion = packets.ServerStatusVersion{"1.15.2", 578}
 
 func RegisterFilters(a radix.Client) {
 	redis = a

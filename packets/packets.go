@@ -9,6 +9,7 @@ const ProtocolVersion = 578
 const MaxPacketSize = 128 * 1024
 const MaxPacketID = 256
 const CompressThreshold = 256
+var GameVersion = ServerStatusVersion{"1.15.2", ProtocolVersion}
 
 type EntityID int32
 type VarInt int32

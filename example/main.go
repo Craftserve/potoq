@@ -37,7 +37,7 @@ func main() {
 func PingHandler(packet *packets.HandshakePacket) packets.ServerStatus {
 	p := potoq.Players.Len()
 	return packets.ServerStatus{
-		Version:     packets.ServerStatusVersion{"1.15.2", 578},
+		Version:     packets.GameVersion,
 		Players:     packets.ServerStatusPlayers{p, p + 1},
 		Description: "potoq",
 	}
