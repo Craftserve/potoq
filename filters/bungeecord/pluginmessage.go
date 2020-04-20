@@ -170,7 +170,7 @@ func PluginMessage(handler *potoq.Handler, packet packets.Packet) error {
 	}
 
 	if output.Len() > 0 {
-		resp := &packets.PluginMessagePacketSB{"BungeeCord", output.Bytes()}
+		resp := &packets.PluginMessagePacketSB{"bungeecord:main", output.Bytes()}
 		err := handler.InjectPackets(packets.ServerBound, nil, resp)
 		if err != nil {
 			return err

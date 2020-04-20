@@ -6,8 +6,6 @@ import (
 	"github.com/Craftserve/potoq"
 	"github.com/Craftserve/potoq/packets"
 	"github.com/Craftserve/potoq/utils"
-
-	"github.com/mediocregopher/radix"
 )
 
 func PingHandler(packet *packets.HandshakePacket) packets.ServerStatus {

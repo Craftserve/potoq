@@ -53,7 +53,6 @@ type Handler struct {
 	// packet dispatcher and other hooks
 	commandChan       HandlerCommandChan
 	CloseHooks        []func()
-	CompressThreshold int // TODO: zamienic na const w packets? VarInt?
 
 	// startup packets, public because contents may be needed in filters etc
 	ClientSettings packets.Packet
@@ -76,7 +75,6 @@ func NewHandler(downsock *net.TCPConn) *Handler {
 	h.Authenticator = getRandomAuthenticator()
 
 	h.commandChan = make(HandlerCommandChan, 10)
-	h.CompressThreshold = 256
 
 	h.t0 = time.Now()
 	return h
@@ -178,7 +176,7 @@ func (handler *Handler) connectUpstream(name string, addr string) (err error) {
 	}
 	switch p := packet.(type) {
 	case *packets.LoginCompressionPacket:
-		if int(p.Threshold) != handler.CompressThreshold {
+		if int(p.Threshold) != packets.CompressThreshold {
 			return fmt.Errorf("connectUpstream: bad compression threshold %d", p.Threshold)
 		}
 	case *packets.LoginKickPacket:
@@ -188,8 +186,8 @@ func (handler *Handler) connectUpstream(name string, addr string) (err error) {
 		panic("unexpected packet type")
 	}
 
-	upstream_r = packets.NewPacketReader(bufio.NewReaderSize(upsock, packets.MaxPacketSize), handler.CompressThreshold)
-	handler.UpstreamW = packets.NewPacketWriter(bufio.NewWriterSize(upsock, packets.MaxPacketSize), handler.CompressThreshold)
+	upstream_r = packets.NewPacketReader(bufio.NewReaderSize(upsock, packets.MaxPacketSize), packets.CompressThreshold)
+	handler.UpstreamW = packets.NewPacketWriter(bufio.NewWriterSize(upsock, packets.MaxPacketSize), packets.CompressThreshold)
 
 	var success packets.LoginSuccessPacket
 	_, err = packets.ParsePackets(upstream_r, &success)
@@ -304,7 +302,7 @@ func (handler *Handler) handlePacket(packet packets.Packet, direction packets.Di
 
 func (handler *Handler) handleProxy() (err error) {
 	if handler.Handshake.Protocol != packets.ProtocolVersion {
-		kick := packets.NewLoginKick(&packets.ChatMessage{Text: "Server version: 1.14.4"}) // ta wersja nie powinna byc tu na sztywno
+		kick := packets.NewLoginKick(&packets.ChatMessage{Text: "Server version: 1.15.2"}) // ta wersja nie powinna byc tu na sztywno
 		return handler.DownstreamW.WritePacket(kick, true)
 	}
 
@@ -319,13 +317,13 @@ func (handler *Handler) handleProxy() (err error) {
 	}
 	handler.Nickname = login_start.Nickname
 
-	compression := &packets.LoginCompressionPacket{packets.VarInt(handler.CompressThreshold)}
+	compression := &packets.LoginCompressionPacket{packets.VarInt(packets.CompressThreshold)}
 	err = handler.DownstreamW.WritePacket(compression, true)
 	if err != nil {
 		return
 	}
-	handler.DownstreamW = packets.NewPacketWriter(handler.DownstreamC, handler.CompressThreshold)
-	handler.DownstreamR = packets.NewPacketReader(handler.DownstreamC, handler.CompressThreshold)
+	handler.DownstreamW = packets.NewPacketWriter(handler.DownstreamC, packets.CompressThreshold)
+	handler.DownstreamR = packets.NewPacketReader(handler.DownstreamC, packets.CompressThreshold)
 
 	// key exchange is quite costly so we look for upstream here, kick non-whitelisted users, set capabilities etc
 	err = PreLoginHandler(handler)

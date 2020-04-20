@@ -114,6 +114,7 @@ func SendDimensionSwitch(w packets.PacketWriter, join *packets.JoinGamePacketCB)
 
 	w.WritePacket(&packets.RespawnPacketCB{
 		Dimension: join.Dimension,
+		HashedSeed: join.HashedSeed,
 		GameMode:  join.GameMode,
 		LevelType: join.LevelType,
 	}, false)

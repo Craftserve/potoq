@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"golang.org/x/time/rate"
 	"math"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -14,7 +15,6 @@ import (
 	"github.com/Craftserve/potoq/utils"
 
 	l4g "github.com/alecthomas/log4go"
-	"github.com/mediocregopher/radix"
 )
 
 var Formatter func(recipient, sender *potoq.Handler, msg string) string = DefaultFormatter
@@ -25,7 +25,7 @@ var globalChatLimiter *rate.Limiter
 var log l4g.Logger
 var supervisor_log l4g.Logger
 var redis radix.Client
-var GameVersion = packets.ServerStatusVersion{"1.14.4", 498}
+var GameVersion = packets.ServerStatusVersion{"1.15.2", 578}
 
 func RegisterFilters(a radix.Client) {
 	redis = a
@@ -39,13 +39,14 @@ func RegisterFilters(a radix.Client) {
 		panic("Unable to load chat.yml: " + err.Error())
 	}
 
-	var log = make(l4g.Logger) // l4g.NewDefaultLogger(l4g.DEBUG)
+	log = make(l4g.Logger) // l4g.NewDefaultLogger(l4g.DEBUG)
 	writer := l4g.NewFileLogWriter("chat.log", false)
 	writer.SetFormat("[%D %T] [%L] %M")
 	log.AddFilter("file", l4g.DEBUG, writer)
 
 	supervisor_log = make(l4g.Logger)
-	writer2 := l4g.NewFileLogWriter("supervisor.log", true)
+	_ = os.Mkdir("supervisor", 0700)
+	writer2 := l4g.NewFileLogWriter("supervisor/supervisor.log", true)
 	writer2.SetFormat("[%D %T] [%L] %M")
 	// writer2.SetRotateDaily(true)
 	supervisor_log.AddFilter("file", l4g.DEBUG, writer2)
