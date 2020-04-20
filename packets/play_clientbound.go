@@ -295,7 +295,6 @@ func (packet *TabCompletePacketCB) Serialize(writer io.Writer) (err error) {
 }
 
 // > 0x34 PlayerListItemPacketCB
-//TODO CHECK!
 const (
 	ADD_PLAYER VarInt = iota
 	UPDATE_GAME_MODE
@@ -690,7 +689,6 @@ type SpawnPlayer struct {
 	Z        int32
 	Yaw      int8
 	Pitch    int8
-//	Metadata EntityMetadata
 }
 
 func (packet *SpawnPlayer) PacketID() VarInt {
@@ -702,38 +700,73 @@ func (packet *SpawnPlayer) Direction() Direction {
 }
 
 func (packet *SpawnPlayer) Parse(reader io.Reader) (err error) {
-	entityID, _ := ReadVarInt(reader)
+	entityID, err := ReadVarInt(reader)
+	if err != nil {
+		return err
+	}
 	packet.EntityID = EntityID(entityID)
-	packet.UUID, _ = ReadMinecraftString(reader, 64)
+	packet.UUID, err = ReadMinecraftString(reader, 64)
+	if err != nil {
+		return err
+	}
 	dataCount, err := ReadVarInt(reader)
 	if err != nil {
-		return
+		return err
 	}
 
 	if dataCount > 1024 {
 		return fmt.Errorf("SpawnPlayer.Data too long! %d elements", dataCount)
 	}
 
-	packet.X, _ = ReadInt(reader)
-	packet.Y, _ = ReadInt(reader)
-	packet.Z, _ = ReadInt(reader)
-	packet.Yaw, _ = ReadByte(reader)
-	packet.Pitch, _ = ReadByte(reader)
+	packet.X, err = ReadInt(reader)
+	if err != nil {
+		return err
+	}
+	packet.Y, err = ReadInt(reader)
+	if err != nil {
+		return err
+	}
+	packet.Z, err = ReadInt(reader)
+	if err != nil {
+		return err
+	}
+	packet.Yaw, err = ReadByte(reader)
+	if err != nil {
+		return err
+	}
+	packet.Pitch, err = ReadByte(reader)
 
 	return
 }
 
 func (packet *SpawnPlayer) Serialize(writer io.Writer) (err error) {
-	WriteVarInt(writer, VarInt(packet.EntityID))
-	WriteMinecraftString(writer, packet.UUID)
+	err = WriteVarInt(writer, VarInt(packet.EntityID))
+	if err != nil {
+		return err
+	}
+	err = WriteMinecraftString(writer, packet.UUID)
+	if err != nil {
+		return err
+	}
 
-	WriteInt(writer, packet.X)
-	WriteInt(writer, packet.Y)
-	WriteInt(writer, packet.Z)
-	WriteByte(writer, packet.Yaw)
-	WriteByte(writer, packet.Pitch)
+	err = WriteInt(writer, packet.X)
+	if err != nil {
+		return err
+	}
+	err = WriteInt(writer, packet.Y)
+	if err != nil {
+		return err
+	}
+	err = WriteInt(writer, packet.Z)
+	if err != nil {
+		return err
+	}
+	err = WriteByte(writer, packet.Yaw)
+	if err != nil {
+		return err
+	}
 
-	return
+	return WriteByte(writer, packet.Pitch)
 }
 
 // 0x16 Window Property
@@ -789,7 +822,6 @@ func (packet *PlayerPositionAndLookPacketCB) Direction() Direction {
 }
 
 // 0x4E Spawn Position
-//TODO recheck
 type SpawnPositionPacketCB struct {
 	Position Position
 }
