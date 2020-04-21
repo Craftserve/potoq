@@ -6,15 +6,13 @@ import (
 	"github.com/Craftserve/potoq"
 	"github.com/Craftserve/potoq/packets"
 	"github.com/Craftserve/potoq/utils"
-
-	"github.com/mediocregopher/radix"
 )
 
 func PingHandler(packet *packets.HandshakePacket) packets.ServerStatus {
 	motd, _, omul, favicondata := GetPingData()
 	p := int(float32(potoq.Players.Len()) * omul)
 	return packets.ServerStatus{
-		Version:     GameVersion,
+		Version:     packets.GameVersion,
 		Players:     packets.ServerStatusPlayers{p, p + 1},
 		Description: motd,
 		Favicon:     favicondata,

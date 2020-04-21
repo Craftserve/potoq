@@ -61,8 +61,8 @@ func (handler *Handler) establishEncryptionAsServer() error {
 	if err != nil {
 		return err
 	}
-	handler.DownstreamR = packets.NewPacketReader(bufio.NewReaderSize(reader, 128*1024), handler.CompressThreshold)
-	handler.DownstreamW = packets.NewPacketWriter(bufio.NewWriterSize(writer, 128*1024), handler.CompressThreshold)
+	handler.DownstreamR = packets.NewPacketReader(bufio.NewReaderSize(reader, 128*1024), packets.CompressThreshold)
+	handler.DownstreamW = packets.NewPacketWriter(bufio.NewWriterSize(writer, 128*1024), packets.CompressThreshold)
 
 	// Verify player with session.minecraft.net
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

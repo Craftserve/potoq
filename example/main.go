@@ -5,17 +5,15 @@ import (
 	"net"
 	"net/http"
 	_ "net/http/pprof"
-	"os"
 	"strings"
 
 	l4g "github.com/alecthomas/log4go"
 
 	"github.com/Craftserve/potoq"
-	"github.com/Craftserve/potoq/filters/permissions"
 	"github.com/Craftserve/potoq/packets"
 )
 
-const BIND_ADDR = "0.0.0.0:6969"
+const BIND_ADDR = "0.0.0.0:25565"
 
 func main() {
 	go func() {
@@ -39,7 +37,7 @@ func main() {
 func PingHandler(packet *packets.HandshakePacket) packets.ServerStatus {
 	p := potoq.Players.Len()
 	return packets.ServerStatus{
-		Version:     packets.ServerStatusVersion{"1.14.4", 498},
+		Version:     packets.GameVersion,
 		Players:     packets.ServerStatusPlayers{p, p + 1},
 		Description: "potoq",
 	}
@@ -64,7 +62,7 @@ func LoginHandler(handler *potoq.Handler, login_err error) (err error) {
 	return nil
 }
 
-func SimpleChatFilter(handler *Handler, packet packets.Packet) error {
+func SimpleChatFilter(handler *potoq.Handler, packet packets.Packet) error {
 	p := packet.(*packets.ChatMessagePacketSB)
 	p.Message = strings.ReplaceAll(p.Message, "premium", "cukier")
 

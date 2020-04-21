@@ -32,7 +32,7 @@ func (packet *ClientSettingsPacketSB) Serialize(writer io.Writer) (err error) {
 	return WriteMinecraftStruct(writer, packet)
 }
 
-// > 0x03 ClientStatusPacketSB
+// > 0x04 ClientStatusPacketSB
 
 type ClientStatusPacketSB struct {
 	Action VarInt
@@ -54,7 +54,7 @@ func (packet *ClientStatusPacketSB) Serialize(writer io.Writer) (err error) {
 	return WriteMinecraftStruct(writer, packet)
 }
 
-// > 0x0A PluginMessagePacketSB
+// > 0x0B PluginMessagePacketSB
 
 type PluginMessagePacketSB struct {
 	Channel string `max_length:"64"`
@@ -81,7 +81,7 @@ func (packet *PluginMessagePacketSB) MakePayloadReader() *bytes.Reader {
 	return bytes.NewReader(packet.Payload)
 }
 
-// > 0x02 ChatMessagePacketSB
+// > 0x03 ChatMessagePacketSB
 
 type ChatMessagePacketSB struct {
 	Message string `max_length:"256"`
@@ -103,7 +103,7 @@ func (packet *ChatMessagePacketSB) Serialize(writer io.Writer) error {
 	return WriteMinecraftStruct(writer, packet)
 }
 
-// > 0x05 TabCompletePacketSB
+// > 0x06 TabCompletePacketSB
 
 type TabCompletePacketSB struct {
 	TransactionId VarInt
