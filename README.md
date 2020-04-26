@@ -6,7 +6,7 @@ Aktualnie działający stabilnie z wersją 1.14.4.
 
 Więcej dokumentacji wkrótce.
 
-JEst to stary, aktualizowany na szybko kod i potrzebne są porządki, ale sporo osób pyta kiedy zostanie to otwarte - więc wrzucamy tak jak jest.
+Jest to stary, aktualizowany na szybko kod i potrzebne są porządki, ale sporo osób pyta kiedy zostanie to otwarte - więc wrzucamy tak jak jest.
 
 Autorzy
 ---
