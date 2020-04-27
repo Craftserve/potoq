@@ -2,12 +2,12 @@ package potoq
 
 import (
 	"fmt"
+	l4g "github.com/alecthomas/log4go"
 	"io/ioutil"
 	"net"
 	"os"
 	"sync"
 
-	l4g "github.com/alecthomas/log4go"
 	"gopkg.in/yaml.v2"
 
 	"github.com/Craftserve/potoq/packets"

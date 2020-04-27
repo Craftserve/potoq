@@ -114,7 +114,7 @@ func (handler *Handler) Handle() {
 
 	err = handler.Tomb.Err()
 	if err != nil {
-		handler.Log().WithError(err).Error("last error")
+		handler.Log().WithError(err).Error("Handler last error")
 	}
 
 	for _, f := range handler.CloseHooks {
@@ -249,7 +249,7 @@ loop:
 					packets.NewPacketWriter(f, 0).WritePacket(raw, true)
 					f.Close()
 				}
-				err = fmt.Errorf("Error parsing packet %02X: %s, dump: %s", raw.ID, err, fname)
+				err = fmt.Errorf("Error parsing packet %02X: %w, dump: %s", raw.ID, err, fname)
 				// err = fmt.Errorf("Error parsing packet %02X: %s, dump: %s, n: %d/%d %d", raw.ID, err, fname, payload_lim.N, len(raw.Payload), raw.DataLength)
 				break
 			}
@@ -270,7 +270,7 @@ loop:
 	if err == io.EOF {
 		tmb.Kill(err)
 	} else {
-		tmb.Killf("%s %s", direction, err)
+		tmb.Killf("%s %w", direction, err)
 	}
 	tmb.Done()
 }
@@ -287,7 +287,7 @@ func (handler *Handler) handlePacket(packet packets.Packet, direction packets.Di
 		case ErrDropPacket:
 			drop = true
 		default:
-			return fmt.Errorf("[%s] dispatch error: %s", direction, err)
+			return fmt.Errorf("[%s] dispatch error: %w", direction, err)
 		}
 	}
 
@@ -295,7 +295,7 @@ func (handler *Handler) handlePacket(packet packets.Packet, direction packets.Di
 	if !drop {
 		err := writer.WritePacket(packet, flush)
 		if err != nil {
-			return fmt.Errorf("[%s] write packet error %v", direction, err)
+			return fmt.Errorf("[%s] write packet error %w", direction, err)
 		}
 	} else {
 		handler.Log().WithFields(logrus.Fields{
@@ -471,7 +471,7 @@ MainLoop:
 	}
 
 	if err != nil && err != io.EOF {
-		err = fmt.Errorf("Error in handler's MainLoop: %s %#v", err, err)
+		err = fmt.Errorf("Error in handler's MainLoop: %w", err)
 		if handler.PacketTrace != nil {
 			err_pt := handler.PacketTrace.Close()
 			if err_pt != nil {
