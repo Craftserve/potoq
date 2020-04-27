@@ -114,7 +114,7 @@ func (handler *Handler) Handle() {
 
 	err = handler.Tomb.Err()
 	if err != nil {
-		handler.Log().Error("%s last error: %s", handler, err)
+		handler.Log().WithError(err).Error("last error")
 	}
 
 	for _, f := range handler.CloseHooks {
@@ -179,7 +179,10 @@ func (handler *Handler) connectUpstream(name string, addr string) (err error) {
 			return fmt.Errorf("connectUpstream: bad compression threshold %d", p.Threshold)
 		}
 	case *packets.LoginKickPacket:
-		handler.Log().Info("Upstream connect kick: %s %s", addr, p.Message)
+		handler.Log().WithFields(logrus.Fields{
+			"address": addr,
+			"message": p.Message,
+		}).Info("Upstream connect kick")
 		return fmt.Errorf(p.Message)
 	default:
 		panic("unexpected packet type")
@@ -194,7 +197,11 @@ func (handler *Handler) connectUpstream(name string, addr string) (err error) {
 		return
 	}
 
-	handler.Log().Info("Upstream connected: %s, %s, %v", name, addr, success)
+	handler.Log().WithFields(logrus.Fields{
+		"name": name,
+		"address": addr,
+		"success": success,
+	}).Info("Upstream connected")
 
 	handler.UpstreamPackets = make(chan packets.Packet)
 	handler.UpstreamTomb = &tomb.Tomb{}
@@ -236,7 +243,7 @@ loop:
 				f, ferr := ioutil.TempFile("trace/", fmt.Sprintf("%s_%02X_*.packet", handler.Nickname, raw.ID))
 				if ferr != nil {
 					fname = "FERR: " + ferr.Error()
-					handler.Log().Error("read_packets: packet dump tempfile error: %s", ferr)
+					handler.Log().WithError(ferr).Error("read_packets: packet dump tempfile error")
 				} else {
 					fname = f.Name()
 					packets.NewPacketWriter(f, 0).WritePacket(raw, true)
@@ -280,9 +287,7 @@ func (handler *Handler) handlePacket(packet packets.Packet, direction packets.Di
 		case ErrDropPacket:
 			drop = true
 		default:
-			//TODO return sth?
-			//return handler.Log().Errorf("[%s] dispatch error: %s", direction, err)
-			handler.Log().Errorf("[%s] dispatch error: %s", direction, err)
+			return fmt.Errorf("[%s] dispatch error: %s", direction, err)
 		}
 	}
 
@@ -290,10 +295,13 @@ func (handler *Handler) handlePacket(packet packets.Packet, direction packets.Di
 	if !drop {
 		err := writer.WritePacket(packet, flush)
 		if err != nil {
-			return handler.Log().Errorf("[%s] write packet error %v", direction, err)
+			return fmt.Errorf("[%s] write packet error %v", direction, err)
 		}
 	} else {
-		handler.Log.Fine("[%s] dropping %#v", direction, packet)
+		handler.Log().WithFields(logrus.Fields{
+			"direction": direction,
+			"packet": packet,
+		}).Debug("dropping")
 	}
 	if is_raw {
 		packets.BufferPool.Put(raw.Payload)
@@ -337,11 +345,11 @@ func (handler *Handler) handleProxy() (err error) {
 	}
 
 	if handler.Authenticator == nil {
-		handler.Log.Debug("Non-premium login for %s", handler)
+		handler.Log().Debug("Non-premium login")
 		handler.UUID = OfflinePlayerUUID(handler.Nickname)
 		err = ErrUnauthenticated
 	} else {
-		handler.Log.Debug("Checking minecraft account for %s", handler)
+		handler.Log().Debug("Checking minecraft account")
 		err = handler.establishEncryptionAsServer()
 	}
 
@@ -412,7 +420,10 @@ MainLoop:
 		case command := <-handler.commandChan:
 			t1 := time.Now()
 			err = command.Execute(handler)
-			handler.Log.Fine("%s command %v took %s", handler, command, time.Since(t1))
+			handler.Log().WithFields(logrus.Fields{
+				"command": command,
+				"time": time.Since(t1),
+			}).Debug("handler command")
 		case packet, ok := <-handler.downstream_packets:
 			if ok {
 				if handler.PacketTrace != nil {
@@ -451,7 +462,7 @@ MainLoop:
 				err = handler.UpstreamTomb.Err()
 			}
 		case <-idle_timeout:
-			handler.Log.Error("Idle timeout in handleProxy MainLoop")
+			handler.Log().Error("Idle timeout in handleProxy MainLoop")
 			err = io.EOF
 		}
 		if err != nil {
@@ -460,11 +471,11 @@ MainLoop:
 	}
 
 	if err != nil && err != io.EOF {
-		err = handler.Log.Error("Error in handler's MainLoop: %s %#v", err, err)
+		err = fmt.Errorf("Error in handler's MainLoop: %s %#v", err, err)
 		if handler.PacketTrace != nil {
 			err_pt := handler.PacketTrace.Close()
 			if err_pt != nil {
-				handler.Log().Errorf("PacketTrace close error: %s", err)
+				handler.Log().WithError(err).Error("PacketTrace close error")
 			}
 		}
 	}
@@ -473,7 +484,7 @@ MainLoop:
 	handler.UpstreamTomb.Kill(nil)
 	handler.downstream_tomb.Kill(nil)
 
-	handler.Log().Info("Closing play handler %s", handler)
+	handler.Log().Info("Closing play handler")
 	return err
 }
 
