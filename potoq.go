@@ -44,7 +44,6 @@ func Serve(listener *net.TCPListener) {
 		}
 
 		handler := NewHandler(socket)
-		handler.Log = l4g.Global
 		go handler.Handle()
 	}
 }

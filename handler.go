@@ -3,6 +3,7 @@ package potoq
 import (
 	"bufio"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"net"
@@ -13,7 +14,6 @@ import (
 	"github.com/Craftserve/potoq/packets"
 	"github.com/Craftserve/potoq/utils"
 
-	l4g "github.com/alecthomas/log4go"
 	"github.com/google/uuid"
 	"gopkg.in/tomb.v1"
 )
@@ -59,7 +59,6 @@ type Handler struct {
 	MCBrand        packets.Packet
 
 	// logging
-	Log         l4g.Logger
 	PacketTrace io.WriteCloser
 	t0          time.Time
 }
@@ -115,7 +114,7 @@ func (handler *Handler) Handle() {
 
 	err = handler.Tomb.Err()
 	if err != nil {
-		handler.Log.Error("%s last error: %s", handler, err)
+		handler.Log().Error("%s last error: %s", handler, err)
 	}
 
 	for _, f := range handler.CloseHooks {
@@ -150,7 +149,7 @@ func (handler *Handler) handleStatus() error {
 }
 
 func (handler *Handler) connectUpstream(name string, addr string) (err error) {
-	handler.Log.Info("Connecting to upstream: %s", addr)
+	handler.Log().Info("Connecting to upstream: %s", addr)
 	upsock, err := net.Dial("tcp", addr)
 	if err != nil {
 		return err
@@ -180,7 +179,7 @@ func (handler *Handler) connectUpstream(name string, addr string) (err error) {
 			return fmt.Errorf("connectUpstream: bad compression threshold %d", p.Threshold)
 		}
 	case *packets.LoginKickPacket:
-		handler.Log.Info("Upstream connect kick: %s %s", addr, p.Message)
+		handler.Log().Info("Upstream connect kick: %s %s", addr, p.Message)
 		return fmt.Errorf(p.Message)
 	default:
 		panic("unexpected packet type")
@@ -195,7 +194,7 @@ func (handler *Handler) connectUpstream(name string, addr string) (err error) {
 		return
 	}
 
-	handler.Log.Info("Upstream connected: %s, %s, %v", name, addr, success)
+	handler.Log().Info("Upstream connected: %s, %s, %v", name, addr, success)
 
 	handler.UpstreamPackets = make(chan packets.Packet)
 	handler.UpstreamTomb = &tomb.Tomb{}
@@ -237,7 +236,7 @@ loop:
 				f, ferr := ioutil.TempFile("trace/", fmt.Sprintf("%s_%02X_*.packet", handler.Nickname, raw.ID))
 				if ferr != nil {
 					fname = "FERR: " + ferr.Error()
-					handler.Log.Error("read_packets: packet dump tempfile error: %s", ferr)
+					handler.Log().Error("read_packets: packet dump tempfile error: %s", ferr)
 				} else {
 					fname = f.Name()
 					packets.NewPacketWriter(f, 0).WritePacket(raw, true)
@@ -281,7 +280,9 @@ func (handler *Handler) handlePacket(packet packets.Packet, direction packets.Di
 		case ErrDropPacket:
 			drop = true
 		default:
-			return handler.Log.Error("[%s] dispatch error: %s", direction, err)
+			//TODO return sth?
+			//return handler.Log().Errorf("[%s] dispatch error: %s", direction, err)
+			handler.Log().Errorf("[%s] dispatch error: %s", direction, err)
 		}
 	}
 
@@ -289,7 +290,7 @@ func (handler *Handler) handlePacket(packet packets.Packet, direction packets.Di
 	if !drop {
 		err := writer.WritePacket(packet, flush)
 		if err != nil {
-			return handler.Log.Error("[%s] write packet error %v", direction, err)
+			return handler.Log().Errorf("[%s] write packet error %v", direction, err)
 		}
 	} else {
 		handler.Log.Fine("[%s] dropping %#v", direction, packet)
@@ -463,7 +464,7 @@ MainLoop:
 		if handler.PacketTrace != nil {
 			err_pt := handler.PacketTrace.Close()
 			if err_pt != nil {
-				handler.Log.Error("PacketTrace close error: %s", err)
+				handler.Log().Errorf("PacketTrace close error: %s", err)
 			}
 		}
 	}
@@ -472,7 +473,7 @@ MainLoop:
 	handler.UpstreamTomb.Kill(nil)
 	handler.downstream_tomb.Kill(nil)
 
-	handler.Log.Info("Closing play handler %s", handler)
+	handler.Log().Info("Closing play handler %s", handler)
 	return err
 }
 
@@ -500,6 +501,15 @@ func (handler *Handler) String() string {
 		uuid_str = handler.UUID.String()
 	}
 	return fmt.Sprintf("Handler{%s, %s, %s, %s}", handler.Nickname, uuid_str, handler.DownstreamAddr, handler.UpstreamName)
+}
+
+func (handler *Handler) Log() logrus.FieldLogger {
+	return logrus.WithFields(logrus.Fields{
+		"uuid": handler.UUID,
+		"nickname": handler.Nickname,
+		"upstream": handler.UpstreamName,
+		"downstreamAddr": handler.DownstreamAddr,
+	})
 }
 
 func (handler *Handler) PushCommand(cmd HandlerCommand, block bool) bool {
