@@ -2,6 +2,7 @@ package potoq
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"io"
 	"time"
 
@@ -56,7 +57,9 @@ func (cmd *ReconnectCommand) Execute(handler *Handler) (err error) {
 		err = fmt.Errorf("Packet other than JoinGamePacketCB while reconnecting upstream: %#v", p)
 		return
 	}
-	handler.Log.Debug("Reconnect Join: %#v", join)
+	handler.Log().WithFields(logrus.Fields{
+		"join": join,
+	}).Debug("Reconnect Join")
 
 	// used for scoreboard
 	if derr := handler.dispatchPacket(join); derr != nil {

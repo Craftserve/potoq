@@ -149,7 +149,9 @@ func (handler *Handler) handleStatus() error {
 }
 
 func (handler *Handler) connectUpstream(name string, addr string) (err error) {
-	handler.Log().Info("Connecting to upstream: %s", addr)
+	handler.Log().WithFields(logrus.Fields{
+		"address": addr,
+	}).Info("Connecting to upstream")
 	upsock, err := net.Dial("tcp", addr)
 	if err != nil {
 		return err
