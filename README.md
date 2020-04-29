@@ -2,7 +2,7 @@ potoq
 =======
 
 Wydajny framework proxy dla Minecraft (java edition) w Go.
-Aktualnie działający stabilnie z wersją 1.14.4.
+Aktualnie działający stabilnie z wersją 1.15.2.
 
 Więcej dokumentacji wkrótce.
 
