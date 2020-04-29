@@ -6,6 +6,7 @@ import (
 	"net"
 	"strings"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/Craftserve/potoq"
 	"github.com/Craftserve/potoq/packets"
 )
@@ -20,7 +21,10 @@ func PluginMessage(handler *potoq.Handler, packet packets.Packet) error {
 	subchannel, _ := ReadJavaUTF(reader)
 	var output bytes.Buffer
 
-	handler.Log.Debug("BungeeCord_PluginMessage %s %d", subchannel, reader.Len())
+	handler.Log().WithFields(log.Fields{
+		"sumchannel": subchannel,
+		"lenght": reader.Len(),
+	}).Debug("BungeeCord_PluginMessage")
 
 	switch subchannel {
 	/*case "Forward":
@@ -59,7 +63,7 @@ func PluginMessage(handler *potoq.Handler, packet packets.Packet) error {
 		cmd, ok := potoq.UpstreamServerMap[upstream_name]
 		potoq.UpstreamLock.Unlock()
 		if !ok {
-			return handler.Log.Error("Unkown bungee upstream name: %s", upstream_name)
+			return fmt.Errorf("Unkown bungee upstream name: %s", upstream_name)
 		}
 		handler.PushCommand(cmd, true)
 	case "ConnectOther":
@@ -75,14 +79,17 @@ func PluginMessage(handler *potoq.Handler, packet packets.Packet) error {
 		cmd, ok := potoq.UpstreamServerMap[server]
 		potoq.UpstreamLock.Unlock()
 		if !ok {
-			return handler.Log.Error("Unkown bungee upstream server: %s", server)
+			return fmt.Errorf("Unkown bungee upstream server: %s", server)
 		}
 		other := potoq.Players.GetByNickname(nickname)
 		if other == nil {
 			return potoq.ErrDropPacket
 		}
 		if !other.PushCommand(cmd, false) {
-			handler.Log.Warn("Cannot inject ConnectOther (" + nickname + " to " + server + ")")
+			handler.Log().WithFields(log.Fields{
+				"server": server,
+				"other nickname": nickname,
+			}).Warn("Cannot inject ConnectOther")
 		}
 	case "IP":
 		WriteJavaUTF(&output, "IP")
