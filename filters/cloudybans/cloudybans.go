@@ -3,8 +3,7 @@ package cloudybans
 import (
 	"strings"
 	"time"
-
-	l4g "github.com/alecthomas/log4go"
+	log "github.com/sirupsen/logrus"
 	"github.com/google/uuid"
 	"github.com/mediocregopher/radix"
 	"gopkg.in/gorp.v2"
@@ -67,7 +66,9 @@ func invalidateCaches(abuse *Abuse) {
 		strings.ToLower(abuse.Kind+":"+abuse.UUID.String()+":"+abuse.Player),
 	))
 	if err != nil {
-		l4g.Error("cloudyBans: invalidateCaches redis error: %v %v", abuse, err)
+		log.WithError(err).WithFields(log.Fields{
+			"abuse": abuse,
+		}).Error("cloudyBans: invalidateCaches redis error")
 	}
 }
 

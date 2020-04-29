@@ -43,7 +43,7 @@ func TrackPlayerLogin(handler *potoq.Handler) (login Login, err error) {
 
 	err = dbmap.Insert(&login)
 	if err != nil {
-		return login, handler.Log.Error("cloudyBans: error in LoginInfo insert: %+v, %s", login, err)
+		return login, fmt.Errorf("cloudyBans: error in LoginInfo insert: %+v, %w", login, err)
 	}
 
 	handler.FilterData.Store("cloudyBans.Login", login)
@@ -51,13 +51,13 @@ func TrackPlayerLogin(handler *potoq.Handler) (login Login, err error) {
 	handler.CloseHooks = append(handler.CloseHooks, func() {
 		_, err := dbmap.Exec("UPDATE cloudyBans_logins SET end = NOW() WHERE id = ?", login.Id)
 		if err != nil {
-			handler.Log.Error("cloudyBans: logins end update error: %s %v", handler, err)
+			handler.Log().WithError(err).Error("cloudyBans: logins end update error")
 		}
 	})
 
 	logins, err2 := dbmap.SelectInt("SELECT COUNT(DISTINCT uuid) AS `logins` FROM `cloudyBans_logins` WHERE `ip` = ? AND `ts` > NOW() - INTERVAL 1 MONTH;", handler.DownstreamAddr)
 	if err2 != nil {
-		handler.Log.Error("cloudyBans: error in LoginInfo select: %s", err)
+		handler.Log().WithError(err).Error("cloudyBans: error in LoginInfo select")
 	}
 	if logins > 1 {
 		potoq.Players.Broadcast("cloudybans.track", fmt.Sprint(packets.COLOR_RED, "Gracz ", handler.Nickname, " logowal sie w tym miesiacu na IP: ", formatIp(handler.DownstreamAddr, !handler.HasPermission("cloudybans.showfullip")), " na ", logins, " roznych kont!"))
