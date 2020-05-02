@@ -2,6 +2,7 @@ package cloudychat
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/time/rate"
 	"math"
 	"os"
@@ -13,8 +14,6 @@ import (
 	"github.com/Craftserve/potoq"
 	"github.com/Craftserve/potoq/packets"
 	"github.com/Craftserve/potoq/utils"
-
-	l4g "github.com/alecthomas/log4go"
 )
 
 var Formatter func(recipient, sender *potoq.Handler, msg string) string = DefaultFormatter
@@ -22,8 +21,8 @@ var MessageHook func(handler *potoq.Handler, kind, message string)
 var globalChatConfig *chatConfig
 var globalChatLock sync.Mutex
 var globalChatLimiter *rate.Limiter
-var log l4g.Logger
-var supervisor_log l4g.Logger
+var log *logrus.Logger
+var supervisor_log *logrus.Logger
 var redis radix.Client
 
 func RegisterFilters(a radix.Client) {
@@ -38,20 +37,19 @@ func RegisterFilters(a radix.Client) {
 		panic("Unable to load chat.yml: " + err.Error())
 	}
 
-	log = make(l4g.Logger) // l4g.NewDefaultLogger(l4g.DEBUG)
-	writer := l4g.NewFileLogWriter("chat.log", false)
-	writer.SetFormat("[%D %T] [%L] %M")
-	log.AddFilter("file", l4g.DEBUG, writer)
-
-	supervisor_log = make(l4g.Logger)
-	err = os.Mkdir("supervisor", 0700)
+	log = logrus.New()
+	chatFile, err := os.OpenFile("chat.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
-		panic("Unable to create supervisor directory: " + err.Error())
+		panic(err)
 	}
-	writer2 := l4g.NewFileLogWriter("supervisor/supervisor.log", true)
-	writer2.SetFormat("[%D %T] [%L] %M")
-	// writer2.SetRotateDaily(true)
-	supervisor_log.AddFilter("file", l4g.DEBUG, writer2)
+	log.SetOutput(chatFile)
+
+	supervisor_log = logrus.New()
+	supervisorFile, err := os.OpenFile("supervisor.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		panic(err)
+	}
+	supervisor_log.SetOutput(supervisorFile)
 
 	globalChatLimiter = rate.NewLimiter(rate.Limit(globalChatConfig.RateLimitHz), globalChatConfig.RateLimitBurst)
 
@@ -70,7 +68,10 @@ func ChatFilter(handler *potoq.Handler, rawPacket packets.Packet) error {
 	}
 
 	if strings.HasPrefix(msg, "/") {
-		log.Info(handler.Nickname + ": " + msg)
+		log.WithFields(logrus.Fields{
+			"nickname": handler.Nickname,
+			"uuid": handler.UUID,
+		}).Info(msg)
 		supervisorMessage(handler, msg)
 		words := strings.Split(msg, " ")
 		switch strings.ToLower(words[0]) {
@@ -146,7 +147,10 @@ func ChatFilter(handler *potoq.Handler, rawPacket packets.Packet) error {
 		MessageHook(handler, "chat", msg)
 	}
 
-	log.Info(handler.Nickname + ": " + input.Message)
+	log.WithFields(logrus.Fields{
+		"nickname": handler.Nickname,
+		"uuid": handler.UUID,
+	}).Info(input.Message)
 
 	return potoq.ErrDropPacket
 }
@@ -155,7 +159,10 @@ func supervisorMessage(handler *potoq.Handler, msg string) {
 	if !handler.HasPermission("cloudychat.supervisor.send") {
 		return
 	}
-	supervisor_log.Info(handler.Nickname + ": " + msg)
+	supervisor_log.WithFields(logrus.Fields{
+		"nickname": handler.Nickname,
+		"uuid": handler.UUID,
+	}).Info(msg)
 	potoq.Players.Broadcast("cloudychat.supervisor.receive", packets.COLOR_GRAY+handler.Nickname+": "+msg)
 	MessageHook(handler, "supervisor", msg)
 }
