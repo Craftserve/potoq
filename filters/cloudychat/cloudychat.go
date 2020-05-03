@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/time/rate"
-	"log"
 	"math"
 	"os"
 	"strconv"
