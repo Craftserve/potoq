@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/time/rate"
+	"log"
 	"math"
 	"os"
 	"strconv"
@@ -21,7 +22,7 @@ var MessageHook func(handler *potoq.Handler, kind, message string)
 var globalChatConfig *chatConfig
 var globalChatLock sync.Mutex
 var globalChatLimiter *rate.Limiter
-var log *logrus.Logger
+var chat_log *logrus.Logger
 var supervisor_log *logrus.Logger
 var redis radix.Client
 
@@ -37,12 +38,12 @@ func RegisterFilters(a radix.Client) {
 		panic("Unable to load chat.yml: " + err.Error())
 	}
 
-	log = logrus.New()
+	chat_log = logrus.New()
 	chatFile, err := os.OpenFile("chat.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		panic(err)
 	}
-	log.SetOutput(chatFile)
+	chat_log.SetOutput(chatFile)
 
 	supervisor_log = logrus.New()
 	supervisorFile, err := os.OpenFile("supervisor.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
@@ -68,7 +69,7 @@ func ChatFilter(handler *potoq.Handler, rawPacket packets.Packet) error {
 	}
 
 	if strings.HasPrefix(msg, "/") {
-		log.WithFields(logrus.Fields{
+		chat_log.WithFields(logrus.Fields{
 			"nickname": handler.Nickname,
 			"uuid": handler.UUID,
 		}).Info(msg)
@@ -147,7 +148,7 @@ func ChatFilter(handler *potoq.Handler, rawPacket packets.Packet) error {
 		MessageHook(handler, "chat", msg)
 	}
 
-	log.WithFields(logrus.Fields{
+	chat_log.WithFields(logrus.Fields{
 		"nickname": handler.Nickname,
 		"uuid": handler.UUID,
 	}).Info(input.Message)

@@ -22,8 +22,8 @@ func PluginMessage(handler *potoq.Handler, packet packets.Packet) error {
 	var output bytes.Buffer
 
 	handler.Log().WithFields(log.Fields{
-		"sumchannel": subchannel,
-		"lenght": reader.Len(),
+		"subchannel": subchannel,
+		"length": reader.Len(),
 	}).Debug("BungeeCord_PluginMessage")
 
 	switch subchannel {
@@ -63,7 +63,7 @@ func PluginMessage(handler *potoq.Handler, packet packets.Packet) error {
 		cmd, ok := potoq.UpstreamServerMap[upstream_name]
 		potoq.UpstreamLock.Unlock()
 		if !ok {
-			return fmt.Errorf("Unkown bungee upstream name: %s", upstream_name)
+			return fmt.Errorf("Unknown bungee upstream name: %s", upstream_name)
 		}
 		handler.PushCommand(cmd, true)
 	case "ConnectOther":
@@ -79,7 +79,7 @@ func PluginMessage(handler *potoq.Handler, packet packets.Packet) error {
 		cmd, ok := potoq.UpstreamServerMap[server]
 		potoq.UpstreamLock.Unlock()
 		if !ok {
-			return fmt.Errorf("Unkown bungee upstream server: %s", server)
+			return fmt.Errorf("Unknown bungee upstream server: %s", server)
 		}
 		other := potoq.Players.GetByNickname(nickname)
 		if other == nil {
@@ -87,8 +87,8 @@ func PluginMessage(handler *potoq.Handler, packet packets.Packet) error {
 		}
 		if !other.PushCommand(cmd, false) {
 			handler.Log().WithFields(log.Fields{
-				"server": server,
-				"other nickname": nickname,
+				"target": server,
+				"nickname": nickname,
 			}).Warn("Cannot inject ConnectOther")
 		}
 	case "IP":
@@ -173,7 +173,7 @@ func PluginMessage(handler *potoq.Handler, packet packets.Packet) error {
 		}
 		potoq.Players.Broadcast(perm, msg)
 	default:
-		return fmt.Errorf("Unkown BungeeCord subchannel: %s", subchannel)
+		return fmt.Errorf("Unknown BungeeCord subchannel: %s", subchannel)
 	}
 
 	if output.Len() > 0 {
