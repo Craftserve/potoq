@@ -72,10 +72,7 @@ func ChatFilter(handler *potoq.Handler, rawPacket packets.Packet) error {
 	}
 
 	if strings.HasPrefix(msg, "/") {
-		ChatLog.WithFields(logrus.Fields{
-			"nickname": handler.Nickname,
-			"uuid": handler.UUID,
-		}).Info(msg)
+		chatLogFields(handler, ChatLog).Info(msg)
 		supervisorMessage(handler, msg)
 		words := strings.Split(msg, " ")
 		switch strings.ToLower(words[0]) {
@@ -151,22 +148,23 @@ func ChatFilter(handler *potoq.Handler, rawPacket packets.Packet) error {
 		MessageHook(handler, "chat", msg)
 	}
 
-	ChatLog.WithFields(logrus.Fields{
-		"nickname": handler.Nickname,
-		"uuid": handler.UUID,
-	}).Info(input.Message)
+	chatLogFields(handler, ChatLog).Info(input.Message)
 
 	return potoq.ErrDropPacket
+}
+
+func chatLogFields(handler *potoq.Handler, log *logrus.Logger) logrus.FieldLogger {
+	return log.WithFields(logrus.Fields{
+		"nickname": handler.Nickname,
+		"uuid": handler.UUID,
+	})
 }
 
 func supervisorMessage(handler *potoq.Handler, msg string) {
 	if !handler.HasPermission("cloudychat.supervisor.send") {
 		return
 	}
-	SupervisorLog.WithFields(logrus.Fields{
-		"nickname": handler.Nickname,
-		"uuid": handler.UUID,
-	}).Info(msg)
+	chatLogFields(handler, SupervisorLog).Info(msg)
 	potoq.Players.Broadcast("cloudychat.supervisor.receive", packets.COLOR_GRAY+handler.Nickname+": "+msg)
 	MessageHook(handler, "supervisor", msg)
 }
