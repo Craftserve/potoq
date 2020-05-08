@@ -3,10 +3,11 @@ package cloudybans
 import (
 	"strings"
 	"time"
-	"github.com/sirupsen/logrus"
+
 	"github.com/google/uuid"
-	"github.com/mediocregopher/radix"
 	"gopkg.in/gorp.v2"
+	"github.com/sirupsen/logrus"
+	"github.com/mediocregopher/radix"
 
 	"github.com/Craftserve/potoq"
 	"github.com/Craftserve/potoq/packets"

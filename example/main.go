@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"net"
 	"net/http"
 	_ "net/http/pprof"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/Craftserve/potoq"
 	"github.com/Craftserve/potoq/packets"

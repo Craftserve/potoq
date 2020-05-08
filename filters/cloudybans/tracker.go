@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/Craftserve/potoq"
 	"github.com/Craftserve/potoq/packets"
-
-	"github.com/google/uuid"
 )
 
 type Login struct {

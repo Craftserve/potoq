@@ -1,8 +1,9 @@
 package cloudychat
 
 import (
-	"github.com/Craftserve/potoq"
 	"io/ioutil"
+
+	"github.com/Craftserve/potoq"
 )
 import "gopkg.in/yaml.v2"
 import "regexp"

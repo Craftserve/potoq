@@ -2,7 +2,6 @@ package cloudychat
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"golang.org/x/time/rate"
 	"math"
 	"os"
@@ -10,6 +9,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/Craftserve/potoq"
 	"github.com/Craftserve/potoq/packets"

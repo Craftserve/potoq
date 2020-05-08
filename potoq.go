@@ -2,12 +2,14 @@ package potoq
 
 import (
 	"fmt"
-	"github.com/Craftserve/potoq/packets"
-	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"net"
 	"sync"
+
+	"github.com/Craftserve/potoq/packets"
+
+	"github.com/sirupsen/logrus"
 )
 
 var Log *logrus.Logger = logrus.StandardLogger()
