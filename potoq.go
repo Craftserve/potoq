@@ -7,7 +7,6 @@ import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"net"
-	"os"
 	"sync"
 )
 
@@ -25,8 +24,6 @@ func Serve(listener *net.TCPListener) {
 	if err != nil {
 		panic(err)
 	}
-	log.SetLevel(log.DebugLevel)
-	log.SetOutput(os.Stdout)
 
 	if PingHandler == nil || PreLoginHandler == nil || LoginHandler == nil {
 		panic("One of required handlers is not set!")
