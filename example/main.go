@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"net"
 	"net/http"
 	_ "net/http/pprof"
@@ -27,7 +28,7 @@ func main() {
 
 	listener, err := net.Listen("tcp", BIND_ADDR)
 	if err != nil {
-		log.WithError(err).Fatal("Error listening")
+		logrus.WithError(err).Fatal("Error listening")
 		return
 	}
 	potoq.Serve(listener.(*net.TCPListener))

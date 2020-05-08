@@ -6,7 +6,7 @@ import (
 	"net"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/Craftserve/potoq"
 	"github.com/Craftserve/potoq/packets"
 )
@@ -21,7 +21,7 @@ func PluginMessage(handler *potoq.Handler, packet packets.Packet) error {
 	subchannel, _ := ReadJavaUTF(reader)
 	var output bytes.Buffer
 
-	handler.Log().WithFields(log.Fields{
+	handler.Log().WithFields(logrus.Fields{
 		"subchannel": subchannel,
 		"length": reader.Len(),
 	}).Debug("BungeeCord_PluginMessage")
