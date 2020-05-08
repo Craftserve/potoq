@@ -9,8 +9,6 @@ import (
 	"os"
 	"strings"
 
-	l4g "github.com/alecthomas/log4go"
-
 	"github.com/Craftserve/potoq"
 	"github.com/Craftserve/potoq/packets"
 )
@@ -23,8 +21,10 @@ func main() {
 	}()
 
 	//Setup logger
-	logrus.SetOutput(os.Stdout)
-	logrus.SetLevel(logrus.DebugLevel)
+	log := logrus.New()
+	log.SetOutput(os.Stdout)
+	log.SetLevel(logrus.DebugLevel)
+	potoq.Log = log
 
 	//Setup handlers
 	potoq.PreLoginHandler = PreLoginHandler
@@ -35,7 +35,7 @@ func main() {
 
 	listener, err := net.Listen("tcp", BIND_ADDR)
 	if err != nil {
-		l4g.Critical("Error listening: %s", err.Error())
+		log.WithError(err).Fatal("Error listening")
 		return
 	}
 	potoq.Serve(listener.(*net.TCPListener))

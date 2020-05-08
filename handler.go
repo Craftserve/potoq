@@ -517,7 +517,7 @@ func (handler *Handler) String() string {
 }
 
 func (handler *Handler) Log() logrus.FieldLogger {
-	return logrus.WithFields(logrus.Fields{
+	return Log.WithFields(logrus.Fields{
 		"uuid": handler.UUID,
 		"nickname": handler.Nickname,
 		"upstream": handler.UpstreamName,

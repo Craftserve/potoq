@@ -10,6 +10,8 @@ import (
 	"sync"
 )
 
+var Log *log.Logger = log.StandardLogger()
+
 var Players PlayerManager
 
 var UpstreamServerMap map[string]*ReconnectCommand
@@ -18,6 +20,7 @@ var UpstreamLock sync.Mutex
 var PingHandler func(packet *packets.HandshakePacket) packets.ServerStatus
 var PreLoginHandler func(handler *Handler) error
 var LoginHandler func(handler *Handler, login_err error) error
+
 
 func Serve(listener *net.TCPListener) {
 	err := LoadUpstreams("upstreams.yml")
@@ -32,7 +35,7 @@ func Serve(listener *net.TCPListener) {
 	for {
 		socket, err := listener.AcceptTCP()
 		if err != nil {
-			log.WithError(err).Error("Error while accepting connection")
+			Log.WithError(err).Error("Error while accepting connection")
 			continue
 		}
 
