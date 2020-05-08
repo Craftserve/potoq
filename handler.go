@@ -425,7 +425,7 @@ MainLoop:
 			handler.Log().WithFields(logrus.Fields{
 				"command": command,
 				"time": time.Since(t1),
-			}).Debug("handler command")
+			}).WithError(err).Debug("Executed command")
 		case packet, ok := <-handler.downstream_packets:
 			if ok {
 				if handler.PacketTrace != nil {
