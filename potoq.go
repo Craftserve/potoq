@@ -21,7 +21,6 @@ var PingHandler func(packet *packets.HandshakePacket) packets.ServerStatus
 var PreLoginHandler func(handler *Handler) error
 var LoginHandler func(handler *Handler, login_err error) error
 
-
 func Serve(listener *net.TCPListener) {
 	err := LoadUpstreams("upstreams.yml")
 	if err != nil {

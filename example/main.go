@@ -20,12 +20,6 @@ func main() {
 		http.ListenAndServe("localhost:6060", nil)
 	}()
 
-	//Setup logger
-	log := logrus.New()
-	log.SetOutput(os.Stdout)
-	log.SetLevel(logrus.DebugLevel)
-	potoq.Log = log
-
 	//Setup handlers
 	potoq.PreLoginHandler = PreLoginHandler
 	potoq.LoginHandler = LoginHandler
