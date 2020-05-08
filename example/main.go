@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"net"
 	"net/http"
 	_ "net/http/pprof"
+	"os"
 	"strings"
 
 	l4g "github.com/alecthomas/log4go"
@@ -20,6 +22,11 @@ func main() {
 		http.ListenAndServe("localhost:6060", nil)
 	}()
 
+	//Setup logger
+	logrus.SetOutput(os.Stdout)
+	logrus.SetLevel(logrus.DebugLevel)
+
+	//Setup handlers
 	potoq.PreLoginHandler = PreLoginHandler
 	potoq.LoginHandler = LoginHandler
 	potoq.PingHandler = PingHandler
