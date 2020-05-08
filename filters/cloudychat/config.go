@@ -62,7 +62,7 @@ func LoadConfig(filename string) (config *chatConfig, err error) {
 	if fv, err := ioutil.ReadFile("favicon.png"); err == nil {
 		config.faviconData = "data:image/png;base64," + base64.StdEncoding.EncodeToString(fv)
 	} else {
-		chat_log.Error("cloudyChat: favicon.png load error: %s (ignored)", err)
+		chatLog.Error("cloudyChat: favicon.png load error: %s (ignored)", err)
 	}
 
 	return

@@ -21,8 +21,8 @@ var MessageHook func(handler *potoq.Handler, kind, message string)
 var globalChatConfig *chatConfig
 var globalChatLock sync.Mutex
 var globalChatLimiter *rate.Limiter
-var chat_log *logrus.Logger
-var supervisor_log *logrus.Logger
+var chatLog *logrus.Logger
+var supervisorLog *logrus.Logger
 var redis radix.Client
 
 func RegisterFilters(a radix.Client) {
@@ -37,19 +37,19 @@ func RegisterFilters(a radix.Client) {
 		panic("Unable to load chat.yml: " + err.Error())
 	}
 
-	chat_log = logrus.New()
+	chatLog = logrus.New()
 	chatFile, err := os.OpenFile("chat.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		panic(err)
 	}
-	chat_log.SetOutput(chatFile)
+	chatLog.SetOutput(chatFile)
 
-	supervisor_log = logrus.New()
+	supervisorLog = logrus.New()
 	supervisorFile, err := os.OpenFile("supervisor.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		panic(err)
 	}
-	supervisor_log.SetOutput(supervisorFile)
+	supervisorLog.SetOutput(supervisorFile)
 
 	globalChatLimiter = rate.NewLimiter(rate.Limit(globalChatConfig.RateLimitHz), globalChatConfig.RateLimitBurst)
 
@@ -68,7 +68,7 @@ func ChatFilter(handler *potoq.Handler, rawPacket packets.Packet) error {
 	}
 
 	if strings.HasPrefix(msg, "/") {
-		chat_log.WithFields(logrus.Fields{
+		chatLog.WithFields(logrus.Fields{
 			"nickname": handler.Nickname,
 			"uuid": handler.UUID,
 		}).Info(msg)
@@ -147,7 +147,7 @@ func ChatFilter(handler *potoq.Handler, rawPacket packets.Packet) error {
 		MessageHook(handler, "chat", msg)
 	}
 
-	chat_log.WithFields(logrus.Fields{
+	chatLog.WithFields(logrus.Fields{
 		"nickname": handler.Nickname,
 		"uuid": handler.UUID,
 	}).Info(input.Message)
@@ -159,7 +159,7 @@ func supervisorMessage(handler *potoq.Handler, msg string) {
 	if !handler.HasPermission("cloudychat.supervisor.send") {
 		return
 	}
-	supervisor_log.WithFields(logrus.Fields{
+	supervisorLog.WithFields(logrus.Fields{
 		"nickname": handler.Nickname,
 		"uuid": handler.UUID,
 	}).Info(msg)
