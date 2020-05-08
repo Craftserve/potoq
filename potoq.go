@@ -3,14 +3,14 @@ package potoq
 import (
 	"fmt"
 	"github.com/Craftserve/potoq/packets"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"net"
 	"sync"
 )
 
-var Log *log.Logger = log.StandardLogger()
+var Log *logrus.Logger = logrus.StandardLogger()
 
 var Players PlayerManager
 
