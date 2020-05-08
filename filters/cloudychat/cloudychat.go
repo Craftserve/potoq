@@ -21,8 +21,8 @@ var MessageHook func(handler *potoq.Handler, kind, message string)
 var globalChatConfig *chatConfig
 var globalChatLock sync.Mutex
 var globalChatLimiter *rate.Limiter
-var chatLog *logrus.Logger
-var supervisorLog *logrus.Logger
+var ChatLog *logrus.Logger
+var SupervisorLog *logrus.Logger
 var redis radix.Client
 
 func RegisterFilters(a radix.Client) {
@@ -37,19 +37,23 @@ func RegisterFilters(a radix.Client) {
 		panic("Unable to load chat.yml: " + err.Error())
 	}
 
-	chatLog = logrus.New()
-	chatFile, err := os.OpenFile("chat.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-	if err != nil {
-		panic(err)
+	if ChatLog == nil {
+		ChatLog = logrus.New()
+		chatFile, err := os.OpenFile("chat.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+		if err != nil {
+			panic(err)
+		}
+		ChatLog.SetOutput(chatFile)
 	}
-	chatLog.SetOutput(chatFile)
 
-	supervisorLog = logrus.New()
-	supervisorFile, err := os.OpenFile("supervisor.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-	if err != nil {
-		panic(err)
+	if SupervisorLog == nil {
+		SupervisorLog = logrus.New()
+		supervisorFile, err := os.OpenFile("supervisor.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+		if err != nil {
+			panic(err)
+		}
+		SupervisorLog.SetOutput(supervisorFile)
 	}
-	supervisorLog.SetOutput(supervisorFile)
 
 	globalChatLimiter = rate.NewLimiter(rate.Limit(globalChatConfig.RateLimitHz), globalChatConfig.RateLimitBurst)
 
@@ -68,7 +72,7 @@ func ChatFilter(handler *potoq.Handler, rawPacket packets.Packet) error {
 	}
 
 	if strings.HasPrefix(msg, "/") {
-		chatLog.WithFields(logrus.Fields{
+		ChatLog.WithFields(logrus.Fields{
 			"nickname": handler.Nickname,
 			"uuid": handler.UUID,
 		}).Info(msg)
@@ -147,7 +151,7 @@ func ChatFilter(handler *potoq.Handler, rawPacket packets.Packet) error {
 		MessageHook(handler, "chat", msg)
 	}
 
-	chatLog.WithFields(logrus.Fields{
+	ChatLog.WithFields(logrus.Fields{
 		"nickname": handler.Nickname,
 		"uuid": handler.UUID,
 	}).Info(input.Message)
@@ -159,7 +163,7 @@ func supervisorMessage(handler *potoq.Handler, msg string) {
 	if !handler.HasPermission("cloudychat.supervisor.send") {
 		return
 	}
-	supervisorLog.WithFields(logrus.Fields{
+	SupervisorLog.WithFields(logrus.Fields{
 		"nickname": handler.Nickname,
 		"uuid": handler.UUID,
 	}).Info(msg)
