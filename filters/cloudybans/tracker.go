@@ -3,6 +3,7 @@ package cloudybans
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"net"
 	"strings"
 	"time"
@@ -51,7 +52,9 @@ func TrackPlayerLogin(handler *potoq.Handler) (login Login, err error) {
 	handler.CloseHooks = append(handler.CloseHooks, func() {
 		_, err := dbmap.Exec("UPDATE cloudyBans_logins SET end = NOW() WHERE id = ?", login.Id)
 		if err != nil {
-			handler.Log().WithError(err).Error("cloudyBans: logins end update error")
+			handler.Log().WithError(err).WithFields(logrus.Fields{
+				"loginID": login.Id,
+			}).Error("cloudyBans: logins end update error")
 		}
 	})
 
