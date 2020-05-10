@@ -1,6 +1,7 @@
 package tab
 
 import (
+	"fmt"
 	"strings"
 	"unicode"
 
@@ -20,7 +21,7 @@ func tabFilter(handler *potoq.Handler, packet packets.Packet) error {
 
 	i := strings.LastIndexFunc(query.Text, unicode.IsSpace)
 	if i < 1 {
-		return handler.Log.Error("tabFilter: i: %d len: %d", i, len(query.Text))
+		return fmt.Errorf("tabFilter: i: %d len: %d", i, len(query.Text))
 	}
 	word := query.Text[i+1:]
 

@@ -2,16 +2,17 @@ package potoq
 
 import (
 	"fmt"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"net"
-	"os"
 	"sync"
 
-	l4g "github.com/alecthomas/log4go"
-	"gopkg.in/yaml.v2"
-
 	"github.com/Craftserve/potoq/packets"
+
+	"github.com/sirupsen/logrus"
 )
+
+var Log *logrus.Logger = logrus.StandardLogger()
 
 var Players PlayerManager
 
@@ -27,10 +28,6 @@ func Serve(listener *net.TCPListener) {
 	if err != nil {
 		panic(err)
 	}
-	l4g.LogBufferLength = 4096
-	logw := l4g.NewFormatLogWriter(os.Stdout, l4g.FORMAT_SHORT)
-	l4g.Global = make(l4g.Logger)
-	l4g.Global.AddFilter("stdout", l4g.DEBUG, logw)
 
 	if PingHandler == nil || PreLoginHandler == nil || LoginHandler == nil {
 		panic("One of required handlers is not set!")
@@ -39,12 +36,11 @@ func Serve(listener *net.TCPListener) {
 	for {
 		socket, err := listener.AcceptTCP()
 		if err != nil {
-			l4g.Error("Error while accepting: %s", err)
+			Log.WithError(err).Error("Error while accepting connection")
 			continue
 		}
 
 		handler := NewHandler(socket)
-		handler.Log = l4g.Global
 		go handler.Handle()
 	}
 }

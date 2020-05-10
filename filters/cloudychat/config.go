@@ -1,6 +1,10 @@
 package cloudychat
 
-import "io/ioutil"
+import (
+	"io/ioutil"
+
+	"github.com/Craftserve/potoq"
+)
 import "gopkg.in/yaml.v2"
 import "regexp"
 import "strings"
@@ -62,7 +66,7 @@ func LoadConfig(filename string) (config *chatConfig, err error) {
 	if fv, err := ioutil.ReadFile("favicon.png"); err == nil {
 		config.faviconData = "data:image/png;base64," + base64.StdEncoding.EncodeToString(fv)
 	} else {
-		log.Error("cloudyChat: favicon.png load error: %s (ignored)", err)
+		potoq.Log.WithError(err).Error("cloudyChat: favicon.png load error (ignored)")
 	}
 
 	return

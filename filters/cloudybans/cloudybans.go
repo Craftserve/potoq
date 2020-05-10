@@ -4,10 +4,10 @@ import (
 	"strings"
 	"time"
 
-	l4g "github.com/alecthomas/log4go"
 	"github.com/google/uuid"
-	"github.com/mediocregopher/radix"
 	"gopkg.in/gorp.v2"
+	"github.com/sirupsen/logrus"
+	"github.com/mediocregopher/radix"
 
 	"github.com/Craftserve/potoq"
 	"github.com/Craftserve/potoq/packets"
@@ -67,7 +67,9 @@ func invalidateCaches(abuse *Abuse) {
 		strings.ToLower(abuse.Kind+":"+abuse.UUID.String()+":"+abuse.Player),
 	))
 	if err != nil {
-		l4g.Error("cloudyBans: invalidateCaches redis error: %v %v", abuse, err)
+		logrus.WithError(err).WithFields(logrus.Fields{
+			"abuse": abuse,
+		}).Error("cloudyBans: invalidateCaches redis error")
 	}
 }
 
