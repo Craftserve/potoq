@@ -87,7 +87,7 @@ func PluginMessage(handler *potoq.Handler, packet packets.Packet) error {
 			return potoq.ErrDropPacket
 		}
 		if !other.PushCommand(cmd, false) {
-			handler.Log().WithFields(log.Fields{
+			handler.Log().WithFields(logrus.Fields{
 				"target": server,
 				"nickname": nickname,
 			}).Warn("Cannot inject ConnectOther")
