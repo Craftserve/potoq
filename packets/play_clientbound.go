@@ -353,11 +353,11 @@ func (packet *PlayerListItemPacketCB) Parse(reader io.Reader) (err error) {
 			}
 			v.Properties = make([]AuthProperty, pnum)
 			for _, prop := range v.Properties {
-				prop.Name, _ = ReadMinecraftString(reader, 64)
-				prop.Value, _ = ReadMinecraftString(reader, 64)
+				prop.Name, _ = ReadMinecraftString(reader, 32767)
+				prop.Value, _ = ReadMinecraftString(reader, 32767)
 				is_signed, err := ReadBool(reader)
 				if is_signed {
-					prop.Signature, err = ReadMinecraftString(reader, 64)
+					prop.Signature, err = ReadMinecraftString(reader, 32767)
 				}
 				if err != nil {
 					return err
