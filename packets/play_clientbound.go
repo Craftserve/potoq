@@ -362,6 +362,7 @@ func (packet *PlayerListItemPacketCB) Parse(reader io.Reader) (err error) {
 				if err != nil {
 					return err
 				}
+				v.Properties[i] = prop
 			}
 			v.GameMode, _ = ReadVarInt(reader)
 			v.Ping, _ = ReadVarInt(reader)
