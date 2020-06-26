@@ -41,7 +41,12 @@ func (cmd *ReconnectCommand) Execute(handler *Handler) (err error) {
 
 	err = handler.connectUpstream(cmd.Name, cmd.Addr)
 	if err != nil { // TODO: brzydkie bledy beda jak sektor pelny chyba
-		handler.DownstreamW.WritePacket(&packets.KickPacketCB{err.Error()}, true) // TODO: logging bledu z tego?
+		handler.Log().
+			WithField("name", cmd.Name).
+			WithField("address", cmd.Addr).
+			WithError(err).
+			Errorln("Connect to upstream failed")
+		_ = handler.DownstreamW.WritePacket(packets.NewIngameKickTxt(err.Error()), true)
 		return
 	}
 
