@@ -23,7 +23,7 @@ type chatConfig struct {
 	Slots              int
 	OnlineMultiplier   float32
 	MOTD               string
-	faviconData        string             // url-encoded favicon data
+	faviconData        string // url-encoded favicon data
 	ResourcePack       ResourcePackConfig `yaml:"resource_pack"`
 }
 
