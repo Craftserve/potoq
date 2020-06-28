@@ -3,13 +3,15 @@ package cloudychat
 import (
 	"github.com/Craftserve/potoq"
 	"github.com/Craftserve/potoq/packets"
+	"time"
 )
 
 const textureAppliedKey = "filters/cloudyChat.textureApplied"
 
 func resFilter(handler *potoq.Handler, rawPacket packets.Packet) error {
 	_ = rawPacket.(*packets.JoinGamePacketCB)
-	if globalChatConfig.Resource_pack_url == "" {
+	resourcePack := globalChatConfig.ResourcePack
+	if resourcePack.Url == "" {
 		return nil
 	}
 
@@ -17,6 +19,13 @@ func resFilter(handler *potoq.Handler, rawPacket packets.Packet) error {
 	if ok {
 		return nil
 	}
-	panic("ResourcePackSendPacketCB not implemented") // TODO: kod nizej nie dziala z 1.13
-	return handler.InjectPackets(packets.ClientBound, nil, &packets.PluginMessagePacketCB{Channel: "MC|RPack", Payload: []byte(globalChatConfig.Resource_pack_url)})
+	resourcePacket := &packets.ResourcePackSendCB{
+		Url:  resourcePack.Url,
+		Hash: resourcePack.Hash,
+	}
+	go func() {
+		time.Sleep(1 * time.Second)
+		_ = handler.InjectPackets(packets.ClientBound, nil, resourcePacket)
+	}()
+	return nil
 }
