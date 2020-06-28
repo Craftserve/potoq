@@ -12,10 +12,10 @@ import (
 // > 0x3B RespawnPacketCB
 
 type RespawnPacketCB struct {
-	Dimension  int32
-	GameMode   uint8
+	Dimension int32
+	GameMode  uint8
 	HashedSeed int64
-	LevelType  string `max_length:"16"`
+	LevelType string `max_length:"16"`
 }
 
 func (packet *RespawnPacketCB) PacketID() VarInt {
