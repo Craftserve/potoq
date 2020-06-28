@@ -864,3 +864,24 @@ func (packet *CameraPacketCB) Serialize(writer io.Writer) error {
 func (packet *CameraPacketCB) Direction() Direction {
 	return ClientBound
 }
+
+type ResourcePackSendCB struct {
+	Url  string
+	Hash string
+}
+
+func (packet *ResourcePackSendCB) PacketID() VarInt {
+	return 0x3A
+}
+
+func (packet *ResourcePackSendCB) Parse(reader io.Reader) (err error) {
+	return ReadMinecraftStruct(reader, packet)
+}
+
+func (packet *ResourcePackSendCB) Serialize(writer io.Writer) error {
+	return WriteMinecraftStruct(writer, packet)
+}
+
+func (packet *ResourcePackSendCB) Direction() Direction {
+	return ClientBound
+}

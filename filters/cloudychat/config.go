@@ -24,7 +24,12 @@ type chatConfig struct {
 	OnlineMultiplier   float32
 	MOTD               string
 	faviconData        string // url-encoded favicon data
-	Resource_pack_url  string `yaml:"resource_pack_url,omitempty"`
+	ResourcePack       ResourcePackConfig `yaml:"resource_pack"`
+}
+
+type ResourcePackConfig struct {
+	Url  string `yaml:"url,omitempty"`
+	Hash string `yaml:"hash,omitempty"`
 }
 
 func LoadConfig(filename string) (config *chatConfig, err error) {
