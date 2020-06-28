@@ -12,10 +12,10 @@ import (
 // > 0x3B RespawnPacketCB
 
 type RespawnPacketCB struct {
-	Dimension int32
-	GameMode  uint8
+	Dimension  int32
+	GameMode   uint8
 	HashedSeed int64
-	LevelType string `max_length:"16"`
+	LevelType  string `max_length:"16"`
 }
 
 func (packet *RespawnPacketCB) PacketID() VarInt {
@@ -862,5 +862,26 @@ func (packet *CameraPacketCB) Serialize(writer io.Writer) error {
 }
 
 func (packet *CameraPacketCB) Direction() Direction {
+	return ClientBound
+}
+
+type ResourcePackSendCB struct {
+	Url  string
+	Hash string
+}
+
+func (packet *ResourcePackSendCB) PacketID() VarInt {
+	return 0x3A
+}
+
+func (packet *ResourcePackSendCB) Parse(reader io.Reader) (err error) {
+	return ReadMinecraftStruct(reader, packet)
+}
+
+func (packet *ResourcePackSendCB) Serialize(writer io.Writer) error {
+	return WriteMinecraftStruct(writer, packet)
+}
+
+func (packet *ResourcePackSendCB) Direction() Direction {
 	return ClientBound
 }
