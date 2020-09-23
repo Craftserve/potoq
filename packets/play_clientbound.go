@@ -405,9 +405,6 @@ func (packet *PlayerListItemPacketCB) Serialize(writer io.Writer) (err error) {
 		}
 		switch packet.Action {
 		case ADD_PLAYER:
-			if len(v.Name) > 16 {
-				return fmt.Errorf("PlayerListItemPacketCB Name too long: %q", v.Name)
-			}
 			WriteMinecraftString(writer, v.Name)
 			WriteVarInt(writer, VarInt(len(v.Properties)))
 			for _, prop := range v.Properties {
@@ -423,9 +420,6 @@ func (packet *PlayerListItemPacketCB) Serialize(writer io.Writer) (err error) {
 			}
 			WriteVarInt(writer, v.GameMode)
 			WriteVarInt(writer, v.Ping)
-			if len(v.DisplayName) > 64 {
-				return fmt.Errorf("PlayerListItemPacketCB DisplayName too long: %q", v.DisplayName)
-			}
 			err = WriteBool(writer, v.DisplayName != "")
 			if v.DisplayName != "" {
 				err = WriteMinecraftString(writer, v.DisplayName)
@@ -435,9 +429,6 @@ func (packet *PlayerListItemPacketCB) Serialize(writer io.Writer) (err error) {
 		case UPDATE_LATENCY:
 			err = WriteVarInt(writer, v.Ping)
 		case UPDATE_DISPLAY_NAME:
-			if len(v.DisplayName) > 64 {
-				return fmt.Errorf("PlayerListItemPacketCB Name too long: %q", v.DisplayName)
-			}
 			err = WriteBool(writer, v.DisplayName != "")
 			if v.DisplayName != "" {
 				err = WriteMinecraftString(writer, v.DisplayName)
