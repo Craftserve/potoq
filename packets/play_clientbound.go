@@ -352,7 +352,7 @@ func (packet *PlayerListItemPacketCB) Parse(reader io.Reader) (err error) {
 				return fmt.Errorf("PlayerListItemPacketCB bad property count %d", pnum)
 			}
 			v.Properties = make([]AuthProperty, pnum)
-			for _, prop := range v.Properties {
+			for propIndex, prop := range v.Properties {
 				prop.Name, _ = ReadMinecraftString(reader, 32767)
 				prop.Value, _ = ReadMinecraftString(reader, 32767)
 				is_signed, err := ReadBool(reader)
@@ -362,7 +362,7 @@ func (packet *PlayerListItemPacketCB) Parse(reader io.Reader) (err error) {
 				if err != nil {
 					return err
 				}
-				v.Properties[i] = prop
+				v.Properties[propIndex] = prop
 			}
 			v.GameMode, _ = ReadVarInt(reader)
 			v.Ping, _ = ReadVarInt(reader)
