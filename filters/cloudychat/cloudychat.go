@@ -158,7 +158,7 @@ func ChatFilter(handler *potoq.Handler, rawPacket packets.Packet) error {
 func chatLogFields(handler *potoq.Handler, log *logrus.Logger) logrus.FieldLogger {
 	return log.WithFields(logrus.Fields{
 		"nickname": handler.Nickname,
-		"uuid": handler.UUID,
+		"uuid":     handler.UUID,
 	})
 }
 
