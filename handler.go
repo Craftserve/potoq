@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -166,6 +167,8 @@ func (handler *Handler) connectUpstream(name string, addr string) (err error) {
 	handler.UpstreamName = name
 
 	handshake := handler.Handshake
+	// Escape handshake host data separator character
+	handshake.Host = strings.Replace(handshake.Host, "\u0000", "\\u0000", -1)
 	// niestety nie da sie tego zaimplementowac w filtrach, bo nie robimy dispatch w state roznym niz PLAY
 	handshake.Host = handshake.Host + "\u0000" + handler.DownstreamAddr + "\u0000" + handler.UUID.String()
 
