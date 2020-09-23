@@ -5,12 +5,12 @@ import (
 	"io"
 )
 
-const ProtocolVersion = 751
+const ProtocolVersion = 753
 const MaxPacketSize = 128 * 1024
 const MaxPacketID = 256
 const CompressThreshold = 512
 
-var GameVersion = ServerStatusVersion{"1.16.2", ProtocolVersion}
+var GameVersion = ServerStatusVersion{"1.16.3", ProtocolVersion}
 
 type EntityID int32
 type VarInt int32
