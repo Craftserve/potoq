@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"gopkg.in/gorp.v2"
+	"github.com/mediocregopher/radix/v3"
 	"github.com/sirupsen/logrus"
-	"github.com/mediocregopher/radix"
+	"gopkg.in/gorp.v2"
 
 	"github.com/Craftserve/potoq"
 	"github.com/Craftserve/potoq/packets"
