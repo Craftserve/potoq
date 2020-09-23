@@ -53,7 +53,7 @@ func helpopCommand(handler *potoq.Handler, inPacket *packets.ChatMessagePacketSB
 		handler.SendChatMessage(msg)
 	}
 	potoq.Players.Broadcast("cloudychat.helpop.view", msg)
-	MessageHook(handler, "helpop", strings.Join(args[1:], " "))
+	invokeMessageHook(handler, "helpop", strings.Join(args[1:], " "))
 
 	helpopHistoryMutex.Lock()
 	now := time.Now().Format(helpopTimeFormat)

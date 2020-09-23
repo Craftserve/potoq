@@ -19,13 +19,23 @@ import (
 )
 
 var Formatter func(recipient, sender *potoq.Handler, msg string) string = DefaultFormatter
-var MessageHook func(handler *potoq.Handler, kind, message string)
 var globalChatConfig *chatConfig
 var globalChatLock sync.Mutex
 var globalChatLimiter *rate.Limiter
 var ChatLog *logrus.Logger
 var SupervisorLog *logrus.Logger
 var redis radix.Client
+var messageHook func(handler *potoq.Handler, kind, message string)
+
+func MessageHook(callback func(handler *potoq.Handler, kind, message string)) {
+	messageHook = callback
+}
+
+func invokeMessageHook(handler *potoq.Handler, kind, message string) {
+	if messageHook != nil {
+		messageHook(handler, kind, message)
+	}
+}
 
 func RegisterFilters(a radix.Client) {
 	redis = a
@@ -146,9 +156,7 @@ func ChatFilter(handler *potoq.Handler, rawPacket packets.Packet) error {
 		return true
 	})
 
-	if MessageHook != nil {
-		MessageHook(handler, "chat", msg)
-	}
+	invokeMessageHook(handler, "chat", msg)
 
 	chatLogFields(handler, ChatLog).Info(input.Message)
 
@@ -168,7 +176,7 @@ func supervisorMessage(handler *potoq.Handler, msg string) {
 	}
 	chatLogFields(handler, SupervisorLog).Info(msg)
 	potoq.Players.Broadcast("cloudychat.supervisor.receive", packets.COLOR_GRAY+handler.Nickname+": "+msg)
-	MessageHook(handler, "supervisor", msg)
+	invokeMessageHook(handler, "supervisor", msg)
 }
 
 func checkMessage(msg string) error {
