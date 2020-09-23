@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"github.com/RyanW02/NamedBinaryTagParser/nbt"
 	"io"
 	"math"
 	"reflect"
@@ -266,11 +267,17 @@ func ReadMinecraftStruct(reader io.Reader, data interface{}) (err error) {
 			}
 			field.SetFloat(math.Float64frombits(binary.BigEndian.Uint64(buf[0:])))
 		case Identifier:
-			var str string
-			if str, err = ReadMinecraftString(reader, IdentifierMaxLength); err != nil {
+			var identifier Identifier
+			if identifier, err = ReadIdentifier(reader); err != nil {
 				return
 			}
-			field.SetString(str)
+			field.Set(reflect.ValueOf(identifier))
+		case []Identifier:
+			var identifiers []Identifier
+			if identifiers, err = ReadIdentifierArray(reader); err != nil {
+				return
+			}
+			field.Set(reflect.ValueOf(identifiers))
 		case string:
 			var maxlen int
 			if maxlen, err = strconv.Atoi(fieldType.Tag.Get("max_length")); err != nil {
@@ -358,6 +365,16 @@ func ReadMinecraftStruct(reader io.Reader, data interface{}) (err error) {
 				return
 			}
 			field.Set(reflect.ValueOf(buf))
+		case nbt.TagCompound:
+			nbtReader, err := nbt.NewParser(reader)
+			if err != nil {
+				return err
+			}
+			tag, _, err := nbtReader.Read()
+			if err != nil {
+				return err
+			}
+			field.Set(reflect.ValueOf(tag))
 		default:
 			panic(fmt.Sprintf("Invalid field %d in minecraft struct %s", i, elemType.Name()))
 		}
@@ -431,6 +448,10 @@ func WriteMinecraftStruct(writer io.Writer, data interface{}) (err error) {
 			if err = WriteIdentifier(writer, field.(Identifier)); err != nil {
 				return
 			}
+		case []Identifier:
+			if err = WriteIdentifierArray(writer, field.([]Identifier)); err != nil {
+				return
+			}
 		case string:
 			if err = WriteMinecraftString(writer, field.(string)); err != nil {
 				return
@@ -487,6 +508,12 @@ func WriteMinecraftStruct(writer io.Writer, data interface{}) (err error) {
 		case uuid.UUID:
 			value := field.(uuid.UUID)
 			_, err = writer.Write(value[:])
+			if err != nil {
+				return
+			}
+		case nbt.TagCompound:
+			tag := field.(nbt.TagCompound)
+			err = nbt.NewWriter(writer).Write(tag, "")
 			if err != nil {
 				return
 			}

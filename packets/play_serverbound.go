@@ -5,7 +5,7 @@ import (
 	"io"
 )
 
-// > 0x04 ClientSettingsPacketSB
+// > 0x05 ClientSettingsPacketSB
 
 type ClientSettingsPacketSB struct {
 	Locale       string `max_length:"16"`

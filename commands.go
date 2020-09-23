@@ -139,8 +139,8 @@ func SendDimensionSwitch(handler *Handler, join *packets.JoinGamePacketCB) (err 
 
 	// send world change to client
 	tempDim := &packets.RespawnPacketCB{
-		Dimension:        "minecraft:overworld",
-		WorldName:        join.WorldName,
+		Dimension:        join.Dimension,
+		DimensionId:      join.DimensionId,
 		GameMode:         join.GameMode,
 		PreviousGameMode: join.PreviousGameMode,
 		HashedSeed:       join.HashedSeed,
@@ -148,15 +148,21 @@ func SendDimensionSwitch(handler *Handler, join *packets.JoinGamePacketCB) (err 
 		IsFlat:           join.IsFlat,
 		CopyMetadata:     false,
 	}
-	if join.Dimension == "minecraft:overworld" {
-		tempDim.Dimension = "minecraft:the_end"
+	if join.DimensionId == "minecraft:overworld" {
+		tempDim.DimensionId = "minecraft:the_end"
 	}
-	w.WritePacket(tempDim, false)
-	w.WritePacket(join, false)
+	err = w.WritePacket(tempDim, false)
+	if err != nil {
+		return
+	}
+	err = w.WritePacket(join, false)
+	if err != nil {
+		return
+	}
 
-	w.WritePacket(&packets.RespawnPacketCB{
+	err = w.WritePacket(&packets.RespawnPacketCB{
 		Dimension:        join.Dimension,
-		WorldName:        join.WorldName,
+		DimensionId:      join.DimensionId,
 		GameMode:         join.GameMode,
 		PreviousGameMode: join.PreviousGameMode,
 		HashedSeed:       join.HashedSeed,
@@ -164,12 +170,17 @@ func SendDimensionSwitch(handler *Handler, join *packets.JoinGamePacketCB) (err 
 		IsFlat:           join.IsFlat,
 		CopyMetadata:     false,
 	}, false)
+	if err != nil {
+		return
+	}
 
-	// send gamemode change ; pokazuje 'your gamemode has been changed' na chacie, ale inaczej cos sie pierdoli z nieznanego powodu i jest wieczny survival; TODO: sprawdzic to
-	w.WritePacket(&packets.GameStateChangePacketCB{
+	err = w.WritePacket(&packets.GameStateChangePacketCB{
 		Reason: 3,
 		Value:  float32(join.GameMode),
 	}, false)
+	if err != nil {
+		return
+	}
 
 	return w.Flush()
 }
