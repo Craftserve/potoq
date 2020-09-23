@@ -41,6 +41,9 @@ type Handler struct {
 	UpstreamName         string
 	UpstreamPacketsCount uint64
 
+	// current upstream state
+	playerList map[uuid.UUID]packets.PlayerListItem
+
 	// used in full connection
 	Handshake      packets.HandshakePacket
 	Nickname       string
@@ -51,8 +54,8 @@ type Handler struct {
 	FilterData     sync.Map
 
 	// packet dispatcher and other hooks
-	commandChan       HandlerCommandChan
-	CloseHooks        []func()
+	commandChan HandlerCommandChan
+	CloseHooks  []func()
 
 	// startup packets, public because contents may be needed in filters etc
 	ClientSettings packets.Packet
@@ -65,6 +68,8 @@ type Handler struct {
 
 func NewHandler(downsock *net.TCPConn) *Handler {
 	h := &Handler{}
+
+	h.playerList = make(map[uuid.UUID]packets.PlayerListItem)
 
 	h.DownstreamC = downsock
 	h.DownstreamR = packets.NewPacketReader(h.DownstreamC, 0)
@@ -200,7 +205,7 @@ func (handler *Handler) connectUpstream(name string, addr string) (err error) {
 	}
 
 	handler.Log().WithFields(logrus.Fields{
-		"name": name,
+		"name":    name,
 		"address": addr,
 		"success": success,
 	}).Info("Upstream connected")
@@ -302,7 +307,7 @@ func (handler *Handler) handlePacket(packet packets.Packet, direction packets.Di
 	} else {
 		handler.Log().WithFields(logrus.Fields{
 			"direction": direction,
-			"packet": packet,
+			"packet":    packet,
 		}).Debug("dropping")
 	}
 	if is_raw {
@@ -424,7 +429,7 @@ MainLoop:
 			err = command.Execute(handler)
 			handler.Log().WithFields(logrus.Fields{
 				"command": command,
-				"time": time.Since(t1),
+				"time":    time.Since(t1),
 			}).WithError(err).Debug("Executed command")
 		case packet, ok := <-handler.downstream_packets:
 			if ok {
@@ -518,9 +523,9 @@ func (handler *Handler) String() string {
 
 func (handler *Handler) Log() logrus.FieldLogger {
 	return Log.WithFields(logrus.Fields{
-		"uuid": handler.UUID,
-		"nickname": handler.Nickname,
-		"upstream": handler.UpstreamName,
+		"uuid":           handler.UUID,
+		"nickname":       handler.Nickname,
+		"upstream":       handler.UpstreamName,
 		"downstreamAddr": handler.DownstreamAddr,
 	})
 }

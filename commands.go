@@ -2,6 +2,7 @@ package potoq
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	"io"
 	"time"
 
@@ -79,7 +80,7 @@ func (cmd *ReconnectCommand) Execute(handler *Handler) (err error) {
 	// 	handler.Log.Warn("minecraft:brand is nil for %s", handler)
 	// }
 
-	return SendDimensionSwitch(handler.DownstreamW, join)
+	return SendDimensionSwitch(handler, join)
 
 	// drop all waiting packets from client until
 	// loop:
@@ -106,26 +107,54 @@ func (cmd *ReconnectCommand) Execute(handler *Handler) (err error) {
 	// return
 }
 
-func SendDimensionSwitch(w packets.PacketWriter, join *packets.JoinGamePacketCB) (err error) {
-	// TODO: bungee tutaj jeszcze czysci scoreboard, bossbary i chyba tabliste aktualizuje, ale mozliwe ze to jest zwiazane z jego wlasnym api a nie spigot
+func SendDimensionSwitch(handler *Handler, join *packets.JoinGamePacketCB) (err error) {
+	w := handler.DownstreamW
+
+	// Delete all tablist cells from
+	currentPlayerList := handler.playerList
+	if currentPlayerList != nil {
+		values := make([]packets.PlayerListItem, 0, len(currentPlayerList))
+		for _, v := range currentPlayerList {
+			values = append(values, v)
+		}
+
+		clearPlayerListPacket := &packets.PlayerListItemPacketCB{
+			Action: packets.REMOVE_PLAYER,
+			Items:  values,
+		}
+		err = w.WritePacket(clearPlayerListPacket, false)
+		if err != nil {
+			return
+		}
+		handler.playerList = make(map[uuid.UUID]packets.PlayerListItem, 0)
+	}
+
+	// Delete header and footer
+	err = w.WritePacket(&packets.PlayerListTitlePacketCB{
+		Header: `{"text":""}`,
+		Footer: `{"text":""}`,
+	}, false)
+	if err != nil {
+		return
+	}
 
 	// send world change to client
-	temp_dim := &packets.RespawnPacketCB{
+	tempDim := &packets.RespawnPacketCB{
 		Dimension: 1,
 		GameMode:  join.GameMode,
 		LevelType: join.LevelType,
 	}
 	if join.Dimension == 1 {
-		temp_dim.Dimension = -1
+		tempDim.Dimension = -1
 	}
-	w.WritePacket(temp_dim, false)
+	w.WritePacket(tempDim, false)
 	w.WritePacket(join, false)
 
 	w.WritePacket(&packets.RespawnPacketCB{
-		Dimension: join.Dimension,
+		Dimension:  join.Dimension,
 		HashedSeed: join.HashedSeed,
-		GameMode:  join.GameMode,
-		LevelType: join.LevelType,
+		GameMode:   join.GameMode,
+		LevelType:  join.LevelType,
 	}, false)
 
 	// send gamemode change ; pokazuje 'your gamemode has been changed' na chacie, ale inaczej cos sie pierdoli z nieznanego powodu i jest wieczny survival; TODO: sprawdzic to
