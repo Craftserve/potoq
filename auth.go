@@ -116,6 +116,7 @@ func (a *Authenticator) HasJoined(ctx context.Context, handler *Handler, secret 
 	}
 	resp, err := a.HttpClient.Do(req.WithContext(ctx))
 	if err != nil {
+		handler.Log().WithError(err).Println("HasJoined failed")
 		return ErrBadLogin
 	}
 	defer resp.Body.Close()
