@@ -3,6 +3,7 @@ package packets
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"io"
 )
 
@@ -31,7 +32,7 @@ func (packet *LoginStartPacket) Direction() Direction {
 // S->C LoginSuccessPacket
 
 type LoginSuccessPacket struct {
-	UID      string `max_length:"36"`
+	UID      uuid.UUID
 	Username string `max_length:"16"`
 }
 

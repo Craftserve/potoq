@@ -373,7 +373,7 @@ func (handler *Handler) handleProxy() (err error) {
 	}
 
 	err = handler.DownstreamW.WritePacket(&packets.LoginSuccessPacket{
-		UID:      handler.UUID.String(),
+		UID:      handler.UUID,
 		Username: handler.Nickname,
 	}, true)
 	if err != nil {

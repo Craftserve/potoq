@@ -5,14 +5,18 @@ import (
 	"io"
 )
 
-const ProtocolVersion = 578
+const ProtocolVersion = 736
 const MaxPacketSize = 128 * 1024
 const MaxPacketID = 256
-const CompressThreshold = 256
-var GameVersion = ServerStatusVersion{"1.15.2", ProtocolVersion}
+const CompressThreshold = 512
+
+var GameVersion = ServerStatusVersion{"1.16.1", ProtocolVersion}
 
 type EntityID int32
 type VarInt int32
+type Identifier string
+
+const IdentifierMaxLength = 32767
 
 type Packet interface {
 	PacketID() VarInt
@@ -29,19 +33,19 @@ type Unmarshaler interface {
 	UnmarshalPacket(w io.Writer) error
 }
 
-func NewPacket(packet_id VarInt, state ConnState, direction Direction) (packet Packet) {
-	if state == HANDSHAKING && direction == ServerBound && packet_id == 0 {
+func NewPacket(packetId VarInt, state ConnState, direction Direction) (packet Packet) {
+	if state == HANDSHAKING && direction == ServerBound && packetId == 0 {
 		packet = new(HandshakePacket)
 	} else if state == STATUS {
 		if direction == ServerBound {
-			switch packet_id {
+			switch packetId {
 			case 0x00:
 				packet = new(StatusRequestPacketSB)
 			case 0x01:
 				packet = new(StatusPingPacketSB)
 			}
 		} else {
-			switch packet_id {
+			switch packetId {
 			case 0x00:
 				packet = new(StatusResponsePacketCB)
 			case 0x01:
@@ -50,14 +54,14 @@ func NewPacket(packet_id VarInt, state ConnState, direction Direction) (packet P
 		}
 	} else if state == LOGIN {
 		if direction == ServerBound {
-			switch packet_id {
+			switch packetId {
 			case 0x00:
 				packet = new(LoginStartPacket)
 			case 0x01:
 				packet = new(EncryptionResponsePacket)
 			}
 		} else {
-			switch packet_id {
+			switch packetId {
 			case 0x00:
 				packet = new(LoginKickPacket)
 			case 0x01:
@@ -69,12 +73,12 @@ func NewPacket(packet_id VarInt, state ConnState, direction Direction) (packet P
 			}
 		}
 	} else if state == PLAY {
-		packet = newPlayPacket(packet_id, direction)
+		packet = newPlayPacket(packetId, direction)
 	}
 
 	if packet != nil {
-		if packet.PacketID() != packet_id {
-			panic(fmt.Sprintf("Packet id mismatch %02X != %T", packet_id, packet))
+		if packet.PacketID() != packetId {
+			panic(fmt.Sprintf("Packet id mismatch %02X != %T", packetId, packet))
 		}
 		if packet.Direction() != direction {
 			panic(fmt.Sprintf("Packet direction mismatch %T", packet))
@@ -100,9 +104,9 @@ func ToString(packet Packet, direction Direction) string {
 	return fmt.Sprintf("%s_%02X %s", direction, packet.PacketID(), s)
 }
 
-func newPlayPacket(packet_id VarInt, direction Direction) (packet Packet) {
+func newPlayPacket(packetId VarInt, direction Direction) (packet Packet) {
 	if direction == ServerBound {
-		switch packet_id {
+		switch packetId {
 		case 0x03:
 			packet = new(ChatMessagePacketSB)
 		case 0x04:
@@ -115,27 +119,27 @@ func newPlayPacket(packet_id VarInt, direction Direction) (packet Packet) {
 			packet = new(PluginMessagePacketSB)
 		}
 	} else {
-		switch packet_id {
-		case 0x3B:
+		switch packetId {
+		case 0x3A:
 			packet = new(RespawnPacketCB)
-		case 0x1B:
+		case 0x1A:
 			packet = new(KickPacketCB)
-		case 0x26:
+		case 0x25:
 			packet = new(JoinGamePacketCB)
-		case 0x19:
+		case 0x18:
 			packet = new(PluginMessagePacketCB)
-		case 0x1F:
+		case 0x1E:
 			packet = new(GameStateChangePacketCB)
-		case 0x0F:
+		case 0x0E:
 			packet = new(ChatMessagePacketCB)
-		case 0x11:
-			packet = new(TabCompletePacketCB) //TODO Przyjrzeć się temu pakietowi
-		case 0x34:
+		case 0x10:
+			packet = new(TabCompletePacketCB)
+		case 0x33:
 			packet = new(PlayerListItemPacketCB)
 		case 0x4A:
 			packet = new(ScoreboardObjectivePacketCB)
 		case 0x4C:
-			packet = new(TeamsPacketCB) //TODO Przyjrzeć się temu pakietowi
+			packet = new(TeamsPacketCB)
 		}
 	}
 	return

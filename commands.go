@@ -2,13 +2,12 @@ package potoq
 
 import (
 	"fmt"
-	"github.com/google/uuid"
 	"io"
 	"time"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/Craftserve/potoq/packets"
+	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 type HandlerCommand interface {
@@ -140,21 +139,30 @@ func SendDimensionSwitch(handler *Handler, join *packets.JoinGamePacketCB) (err 
 
 	// send world change to client
 	tempDim := &packets.RespawnPacketCB{
-		Dimension: 1,
-		GameMode:  join.GameMode,
-		LevelType: join.LevelType,
+		Dimension:        "minecraft:overworld",
+		WorldName:        join.WorldName,
+		GameMode:         join.GameMode,
+		PreviousGameMode: join.PreviousGameMode,
+		HashedSeed:       join.HashedSeed,
+		IsDebug:          join.IsDebug,
+		IsFlat:           join.IsFlat,
+		CopyMetadata:     false,
 	}
-	if join.Dimension == 1 {
-		tempDim.Dimension = -1
+	if join.Dimension == "minecraft:overworld" {
+		tempDim.Dimension = "minecraft:the_end"
 	}
 	w.WritePacket(tempDim, false)
 	w.WritePacket(join, false)
 
 	w.WritePacket(&packets.RespawnPacketCB{
-		Dimension:  join.Dimension,
-		HashedSeed: join.HashedSeed,
-		GameMode:   join.GameMode,
-		LevelType:  join.LevelType,
+		Dimension:        join.Dimension,
+		WorldName:        join.WorldName,
+		GameMode:         join.GameMode,
+		PreviousGameMode: join.PreviousGameMode,
+		HashedSeed:       join.HashedSeed,
+		IsDebug:          join.IsDebug,
+		IsFlat:           join.IsFlat,
+		CopyMetadata:     false,
 	}, false)
 
 	// send gamemode change ; pokazuje 'your gamemode has been changed' na chacie, ale inaczej cos sie pierdoli z nieznanego powodu i jest wieczny survival; TODO: sprawdzic to

@@ -4,22 +4,27 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/RyanW02/NamedBinaryTagParser/nbt"
 	"github.com/google/uuid"
 	"io"
 	"io/ioutil"
 )
 
-// > 0x3B RespawnPacketCB
+// > 0x3A RespawnPacketCB
 
 type RespawnPacketCB struct {
-	Dimension  int32
-	GameMode   uint8
-	HashedSeed int64
-	LevelType  string `max_length:"16"`
+	Dimension        Identifier `max_length:"32767"`
+	WorldName        Identifier `max_length:"32767"`
+	GameMode         uint8
+	PreviousGameMode uint8
+	HashedSeed       int64
+	IsDebug          bool
+	IsFlat           bool
+	CopyMetadata     bool
 }
 
 func (packet *RespawnPacketCB) PacketID() VarInt {
-	return 0x3B
+	return 0x3A
 }
 
 func (packet *RespawnPacketCB) Direction() Direction {
@@ -34,14 +39,14 @@ func (packet *RespawnPacketCB) Serialize(writer io.Writer) (err error) {
 	return WriteMinecraftStruct(writer, packet)
 }
 
-// > 0x1B KickPacketCB
+// > 0x1A KickPacketCB
 
 type KickPacketCB struct {
 	Message string `max_length:"256"`
 }
 
 func (packet *KickPacketCB) PacketID() VarInt {
-	return 0x1B
+	return 0x1A
 }
 
 func (packet *KickPacketCB) Direction() Direction {
@@ -79,37 +84,154 @@ func NewIngameKickTxt(text string) *KickPacketCB {
 	return NewIngameKick(&ChatMessage{Text: text})
 }
 
-// > 0x26 JoinGamePacketCB
+// > 0x25 JoinGamePacketCB
 
 type JoinGamePacketCB struct {
-	PlayerEntity        EntityID `datatype:"int32"`
+	PlayerEntity        EntityID
 	GameMode            uint8
-	Dimension           int32
+	PreviousGameMode    uint8
+	AllWorldNames       []Identifier
+	DimensionCodec      nbt.TagCompound
+	Dimension           Identifier
+	WorldName           Identifier
 	MaxPlayers          uint8
 	HashedSeed          int64
-	LevelType           string `max_length:"16"`
 	ViewDistance        VarInt
 	ReducedDebugInfo    bool
 	EnableRespawnScreen bool
+	IsDebug             bool
+	IsFlat              bool
 }
 
 func (packet *JoinGamePacketCB) PacketID() VarInt {
-	return 0x26
+	return 0x25
 }
 
 func (packet *JoinGamePacketCB) Direction() Direction {
 	return ClientBound
 }
 
-func (packet *JoinGamePacketCB) Parse(reader io.Reader) (err error) {
-	return ReadMinecraftStruct(reader, packet)
+func (packet *JoinGamePacketCB) Parse(reader io.Reader) error {
+	entityId, err := ReadInt(reader)
+	if err != nil {
+		return err
+	}
+	packet.PlayerEntity = EntityID(entityId)
+	packet.GameMode, err = ReadUnsignedByte(reader)
+	if err != nil {
+		return err
+	}
+	packet.PreviousGameMode, err = ReadUnsignedByte(reader)
+	if err != nil {
+		return err
+	}
+	packet.AllWorldNames, err = ReadIdentifierArray(reader)
+	if err != nil {
+		return err
+	}
+	nbtParser, err := nbt.NewParser(reader)
+	if err != nil {
+		return err
+	}
+	packet.DimensionCodec, _, err = nbtParser.Read()
+	if err != nil {
+		return err
+	}
+	packet.Dimension, err = ReadIdentifier(reader)
+	if err != nil {
+		return err
+	}
+	packet.WorldName, err = ReadIdentifier(reader)
+	if err != nil {
+		return err
+	}
+	packet.HashedSeed, err = ReadLong(reader)
+	if err != nil {
+		return err
+	}
+	packet.MaxPlayers, err = ReadUnsignedByte(reader)
+	if err != nil {
+		return err
+	}
+	packet.ViewDistance, err = ReadVarInt(reader)
+	if err != nil {
+		return err
+	}
+	packet.ReducedDebugInfo, err = ReadBool(reader)
+	if err != nil {
+		return err
+	}
+	packet.EnableRespawnScreen, err = ReadBool(reader)
+	if err != nil {
+		return err
+	}
+	packet.IsDebug, err = ReadBool(reader)
+	if err != nil {
+		return err
+	}
+	packet.IsFlat, err = ReadBool(reader)
+	return err
 }
 
 func (packet *JoinGamePacketCB) Serialize(writer io.Writer) (err error) {
-	return WriteMinecraftStruct(writer, packet)
+	err = WriteInt(writer, int32(packet.PlayerEntity))
+	if err != nil {
+		return err
+	}
+	err = WriteUnsignedByte(writer, packet.GameMode)
+	if err != nil {
+		return err
+	}
+	err = WriteUnsignedByte(writer, packet.PreviousGameMode)
+	if err != nil {
+		return err
+	}
+	err = WriteIdentifierArray(writer, packet.AllWorldNames)
+	if err != nil {
+		return err
+	}
+	stream := nbt.NewWriter(writer)
+	err = stream.Write(packet.DimensionCodec, "")
+	if err != nil {
+		return err
+	}
+	err = WriteIdentifier(writer, packet.Dimension)
+	if err != nil {
+		return err
+	}
+	err = WriteIdentifier(writer, packet.WorldName)
+	if err != nil {
+		return err
+	}
+	err = WriteLong(writer, packet.HashedSeed)
+	if err != nil {
+		return err
+	}
+	err = WriteUnsignedByte(writer, packet.MaxPlayers)
+	if err != nil {
+		return err
+	}
+	err = WriteVarInt(writer, packet.ViewDistance)
+	if err != nil {
+		return err
+	}
+	err = WriteBool(writer, packet.ReducedDebugInfo)
+	if err != nil {
+		return err
+	}
+	err = WriteBool(writer, packet.EnableRespawnScreen)
+	if err != nil {
+		return err
+	}
+	err = WriteBool(writer, packet.IsDebug)
+	if err != nil {
+		return err
+	}
+	err = WriteBool(writer, packet.IsFlat)
+	return err
 }
 
-// > 0x19 PluginMessagePacketCB
+// > 0x18 PluginMessagePacketCB
 
 type PluginMessagePacketCB struct {
 	Channel string `max_length:"64"`
@@ -117,7 +239,7 @@ type PluginMessagePacketCB struct {
 }
 
 func (packet *PluginMessagePacketCB) PacketID() VarInt {
-	return 0x19
+	return 0x18
 }
 
 func (packet *PluginMessagePacketCB) Direction() Direction {
@@ -143,7 +265,7 @@ func (packet *PluginMessagePacketCB) MakePayloadReader() *bytes.Reader {
 	return bytes.NewReader(packet.Payload)
 }
 
-// > 0x1F GameStateChangePacketCB
+// > 0x1E GameStateChangePacketCB
 
 type GameStateChangePacketCB struct {
 	Reason uint8
@@ -151,7 +273,7 @@ type GameStateChangePacketCB struct {
 }
 
 func (packet *GameStateChangePacketCB) PacketID() VarInt {
-	return 0x1F
+	return 0x1E
 }
 
 func (packet *GameStateChangePacketCB) Direction() Direction {
@@ -166,15 +288,16 @@ func (packet *GameStateChangePacketCB) Serialize(writer io.Writer) (err error) {
 	return WriteMinecraftStruct(writer, packet)
 }
 
-// > 0x0F ChatMessagePacketCB
+// > 0x0E ChatMessagePacketCB
 
 type ChatMessagePacketCB struct {
 	Message  string `max_length:"32767"`
 	Position uint8
+	Sender   uuid.UUID
 }
 
 func (packet *ChatMessagePacketCB) PacketID() VarInt {
-	return 0x0F
+	return 0x0E
 }
 
 func (packet *ChatMessagePacketCB) Direction() Direction {
@@ -213,7 +336,7 @@ func (packet *ChatMessagePacketCB) SetText(text string) error {
 	return packet
 }*/
 
-// > 0x11 TabCompletePacketCB
+// > 0x10 TabCompletePacketCB
 
 type TabCompleteMatch struct {
 	Match   string
@@ -229,7 +352,7 @@ type TabCompletePacketCB struct {
 }
 
 func (packet *TabCompletePacketCB) PacketID() VarInt {
-	return 0x11
+	return 0x10
 }
 
 func (packet *TabCompletePacketCB) Direction() Direction {
@@ -294,7 +417,7 @@ func (packet *TabCompletePacketCB) Serialize(writer io.Writer) (err error) {
 	return
 }
 
-// > 0x34 PlayerListItemPacketCB
+// > 0x33 PlayerListItemPacketCB
 const (
 	ADD_PLAYER VarInt = iota
 	UPDATE_GAME_MODE
@@ -318,7 +441,7 @@ type PlayerListItemPacketCB struct {
 }
 
 func (packet *PlayerListItemPacketCB) PacketID() VarInt {
-	return 0x34
+	return 0x33
 }
 
 func (packet *PlayerListItemPacketCB) Direction() Direction {
@@ -355,8 +478,8 @@ func (packet *PlayerListItemPacketCB) Parse(reader io.Reader) (err error) {
 			for propIndex, prop := range v.Properties {
 				prop.Name, _ = ReadMinecraftString(reader, 32767)
 				prop.Value, _ = ReadMinecraftString(reader, 32767)
-				is_signed, err := ReadBool(reader)
-				if is_signed {
+				isSigned, err := ReadBool(reader)
+				if isSigned {
 					prop.Signature, err = ReadMinecraftString(reader, 32767)
 				}
 				if err != nil {
@@ -366,9 +489,9 @@ func (packet *PlayerListItemPacketCB) Parse(reader io.Reader) (err error) {
 			}
 			v.GameMode, _ = ReadVarInt(reader)
 			v.Ping, _ = ReadVarInt(reader)
-			var has_displayname bool
-			has_displayname, err = ReadBool(reader)
-			if has_displayname {
+			var hasDisplayName bool
+			hasDisplayName, err = ReadBool(reader)
+			if hasDisplayName {
 				v.DisplayName, err = ReadMinecraftString(reader, 128)
 			}
 		case UPDATE_GAME_MODE:
@@ -376,9 +499,9 @@ func (packet *PlayerListItemPacketCB) Parse(reader io.Reader) (err error) {
 		case UPDATE_LATENCY:
 			v.Ping, err = ReadVarInt(reader)
 		case UPDATE_DISPLAY_NAME:
-			var has_displayname bool
-			has_displayname, err = ReadBool(reader)
-			if has_displayname {
+			var hasDisplayName bool
+			hasDisplayName, err = ReadBool(reader)
+			if hasDisplayName {
 				v.DisplayName, err = ReadMinecraftString(reader, 128)
 			}
 		case REMOVE_PLAYER:
@@ -443,7 +566,7 @@ func (packet *PlayerListItemPacketCB) Serialize(writer io.Writer) (err error) {
 	return
 }
 
-// 0x54 Player List Title (Header/Footer)
+// 0x53 Player List Title (Header/Footer)
 
 type PlayerListTitlePacketCB struct {
 	Header string `max_length:"1024"`
@@ -451,7 +574,7 @@ type PlayerListTitlePacketCB struct {
 }
 
 func (packet *PlayerListTitlePacketCB) PacketID() VarInt {
-	return 0x54
+	return 0x53
 }
 
 func (packet *PlayerListTitlePacketCB) Direction() Direction {
@@ -671,7 +794,7 @@ func (packet *TeamsPacketCB) Serialize(writer io.Writer) (err error) {
 // 	return
 // }
 
-// 0x05 Spawn Player
+// 0x04 Spawn Player
 
 type SpawnPlayer struct {
 	EntityID EntityID
@@ -684,7 +807,7 @@ type SpawnPlayer struct {
 }
 
 func (packet *SpawnPlayer) PacketID() VarInt {
-	return 0x05
+	return 0x04
 }
 
 func (packet *SpawnPlayer) Direction() Direction {
@@ -785,7 +908,7 @@ func (packet *SpawnPlayer) Serialize(writer io.Writer) (err error) {
 // 	return ClientBound
 // }
 
-// 0x36 Player Position And Look CB
+// 0x35 Player Position And Look CB
 
 type PlayerPositionAndLookPacketCB struct {
 	X          float64
@@ -798,7 +921,7 @@ type PlayerPositionAndLookPacketCB struct {
 }
 
 func (packet *PlayerPositionAndLookPacketCB) PacketID() VarInt {
-	return 0x36
+	return 0x35
 }
 
 func (packet *PlayerPositionAndLookPacketCB) Parse(reader io.Reader) (err error) {
@@ -813,13 +936,13 @@ func (packet *PlayerPositionAndLookPacketCB) Direction() Direction {
 	return ClientBound
 }
 
-// 0x4E Spawn Position
+// 0x42 Spawn Position
 type SpawnPositionPacketCB struct {
 	Position Position
 }
 
 func (packet *SpawnPositionPacketCB) PacketID() VarInt {
-	return 0x4E
+	return 0x42
 }
 
 func (packet *SpawnPositionPacketCB) Parse(reader io.Reader) (err error) {
@@ -834,14 +957,14 @@ func (packet *SpawnPositionPacketCB) Direction() Direction {
 	return ClientBound
 }
 
-// 0x3F Camera
+// 0x3E Camera
 
 type CameraPacketCB struct { // 1.14
 	ID EntityID `datatype:"VarInt"`
 }
 
 func (packet *CameraPacketCB) PacketID() VarInt {
-	return 0x3F
+	return 0x3E
 }
 
 func (packet *CameraPacketCB) Parse(reader io.Reader) (err error) {
@@ -856,13 +979,15 @@ func (packet *CameraPacketCB) Direction() Direction {
 	return ClientBound
 }
 
+// 0x39 ResourcePack
+
 type ResourcePackSendCB struct {
 	Url  string
 	Hash string
 }
 
 func (packet *ResourcePackSendCB) PacketID() VarInt {
-	return 0x3A
+	return 0x39
 }
 
 func (packet *ResourcePackSendCB) Parse(reader io.Reader) (err error) {

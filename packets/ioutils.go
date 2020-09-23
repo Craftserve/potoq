@@ -63,16 +63,16 @@ func ReadDouble(reader io.Reader) (c float64, err error) {
 	return
 }
 
-func ReadMinecraftString(reader io.Reader, max_length int) (string, error) {
+func ReadMinecraftString(reader io.Reader, maxLength int) (string, error) {
 	length, err := ReadVarInt(reader)
 	if err != nil {
 		return "", err
 	}
-	if int(length) > max_length {
-		return "", fmt.Errorf("String longer than max_length: %d > %d", length, max_length)
+	if int(length) > maxLength {
+		return "", fmt.Errorf("string longer than maxLength: %d > %d", length, maxLength)
 	}
 	if length < 0 {
-		return "", fmt.Errorf("String length smaller than 0: %d", length)
+		return "", fmt.Errorf("string length smaller than 0: %d", length)
 	}
 
 	d := make([]byte, length)
@@ -80,6 +80,27 @@ func ReadMinecraftString(reader io.Reader, max_length int) (string, error) {
 		return "", err
 	}
 	return string(d), nil
+}
+
+func ReadIdentifier(reader io.Reader) (Identifier, error) {
+	val, err := ReadMinecraftString(reader, IdentifierMaxLength)
+	return Identifier(val), err
+}
+
+func ReadIdentifierArray(reader io.Reader) ([]Identifier, error) {
+	count, err := ReadVarInt(reader)
+	if err != nil {
+		return nil, err
+	}
+	array := make([]Identifier, count)
+	for i := 0; i < int(count); i++ {
+		value, err := ReadIdentifier(reader)
+		if err != nil {
+			return array, err
+		}
+		array = append(array, value)
+	}
+	return array, err
 }
 
 func WriteBool(writer io.Writer, c bool) error {
@@ -132,6 +153,29 @@ func WriteMinecraftString(writer io.Writer, s string) (err error) {
 		return err
 	}
 	_, err = writer.Write([]byte(s))
+	return
+}
+
+func WriteIdentifier(writer io.Writer, identifier Identifier) (err error) {
+	err = WriteVarInt(writer, VarInt(len(identifier)))
+	if err != nil {
+		return err
+	}
+	_, err = writer.Write([]byte(identifier))
+	return
+}
+
+func WriteIdentifierArray(writer io.Writer, identifiers []Identifier) (err error) {
+	err = WriteVarInt(writer, VarInt(len(identifiers)))
+	if err != nil {
+		return err
+	}
+	for _, identifier := range identifiers {
+		err = WriteIdentifier(writer, identifier)
+		if err != nil {
+			return err
+		}
+	}
 	return
 }
 
@@ -221,6 +265,12 @@ func ReadMinecraftStruct(reader io.Reader, data interface{}) (err error) {
 				return
 			}
 			field.SetFloat(math.Float64frombits(binary.BigEndian.Uint64(buf[0:])))
+		case Identifier:
+			var str string
+			if str, err = ReadMinecraftString(reader, IdentifierMaxLength); err != nil {
+				return
+			}
+			field.SetString(str)
 		case string:
 			var maxlen int
 			if maxlen, err = strconv.Atoi(fieldType.Tag.Get("max_length")); err != nil {
@@ -302,12 +352,12 @@ func ReadMinecraftStruct(reader io.Reader, data interface{}) (err error) {
 				return
 			}
 		case uuid.UUID:
-			var buf [16]byte
+			var buf uuid.UUID
 			_, err = io.ReadFull(reader, buf[:])
 			if err != nil {
 				return
 			}
-			field.SetBytes(buf[:]) // nie wiem czy to tutaj zadziala poprawnie
+			field.Set(reflect.ValueOf(buf))
 		default:
 			panic(fmt.Sprintf("Invalid field %d in minecraft struct %s", i, elemType.Name()))
 		}
@@ -377,6 +427,10 @@ func WriteMinecraftStruct(writer io.Writer, data interface{}) (err error) {
 			if _, err = writer.Write(buf[0:]); err != nil {
 				return
 			}
+		case Identifier:
+			if err = WriteIdentifier(writer, field.(Identifier)); err != nil {
+				return
+			}
 		case string:
 			if err = WriteMinecraftString(writer, field.(string)); err != nil {
 				return
@@ -431,7 +485,8 @@ func WriteMinecraftStruct(writer io.Writer, data interface{}) (err error) {
 				return
 			}
 		case uuid.UUID:
-			_, err = writer.Write(field.([]byte)) // ??? nie wiem czy mozna tak rzutowac bezposrednio
+			value := field.(uuid.UUID)
+			_, err = writer.Write(value[:])
 			if err != nil {
 				return
 			}
