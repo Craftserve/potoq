@@ -1,6 +1,7 @@
 package cloudychat
 
 import (
+	"github.com/mediocregopher/radix/v3"
 	"time"
 
 	"github.com/Craftserve/potoq"
