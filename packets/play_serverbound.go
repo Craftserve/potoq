@@ -8,12 +8,13 @@ import (
 // > 0x05 ClientSettingsPacketSB
 
 type ClientSettingsPacketSB struct {
-	Locale       string `max_length:"16"`
-	ViewDistance byte
-	ChatMode     VarInt
-	ChatColors   bool
-	SkinParts    uint8
-	Hand         VarInt
+	Locale               string `max_length:"16"`
+	ViewDistance         byte
+	ChatMode             VarInt
+	ChatColors           bool
+	SkinParts            uint8
+	Hand                 VarInt
+	DisableTextFiltering bool
 }
 
 func (packet *ClientSettingsPacketSB) PacketID() VarInt {
