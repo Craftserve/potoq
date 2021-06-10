@@ -134,7 +134,7 @@ func newPlayPacket(packetId VarInt, direction Direction) (packet Packet) {
 			packet = new(ChatMessagePacketCB)
 		case 0x11:
 			packet = new(TabCompletePacketCB)
-		case 0x35:
+		case 0x36:
 			packet = new(PlayerListItemPacketCB)
 		case 0x52:
 			packet = new(ScoreboardObjectivePacketCB)

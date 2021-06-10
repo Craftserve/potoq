@@ -306,7 +306,7 @@ func (packet *TabCompletePacketCB) Serialize(writer io.Writer) (err error) {
 	return
 }
 
-// > 0x35 PlayerListItemPacketCB
+// > 0x36 PlayerListItemPacketCB
 const (
 	ADD_PLAYER VarInt = iota
 	UPDATE_GAME_MODE
@@ -330,7 +330,7 @@ type PlayerListItemPacketCB struct {
 }
 
 func (packet *PlayerListItemPacketCB) PacketID() VarInt {
-	return 0x35
+	return 36
 }
 
 func (packet *PlayerListItemPacketCB) Direction() Direction {
@@ -826,13 +826,14 @@ func (packet *PlayerPositionAndLookPacketCB) Direction() Direction {
 	return ClientBound
 }
 
-// 0x4A Spawn Position
+// 0x4B Spawn Position
 type SpawnPositionPacketCB struct {
 	Position Position
+	Angle    float32
 }
 
 func (packet *SpawnPositionPacketCB) PacketID() VarInt {
-	return 0x4A
+	return 0x4B
 }
 
 func (packet *SpawnPositionPacketCB) Parse(reader io.Reader) (err error) {
