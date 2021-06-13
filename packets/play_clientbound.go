@@ -330,7 +330,7 @@ type PlayerListItemPacketCB struct {
 }
 
 func (packet *PlayerListItemPacketCB) PacketID() VarInt {
-	return 36
+	return 0x36
 }
 
 func (packet *PlayerListItemPacketCB) Direction() Direction {

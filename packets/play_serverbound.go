@@ -55,7 +55,7 @@ func (packet *ClientStatusPacketSB) Serialize(writer io.Writer) (err error) {
 	return WriteMinecraftStruct(writer, packet)
 }
 
-// > 0x0B PluginMessagePacketSB
+// > 0x0A PluginMessagePacketSB
 
 type PluginMessagePacketSB struct {
 	Channel string `max_length:"64"`
@@ -63,7 +63,7 @@ type PluginMessagePacketSB struct {
 }
 
 func (packet *PluginMessagePacketSB) PacketID() VarInt {
-	return 0x0B
+	return 0x0A
 }
 
 func (packet *PluginMessagePacketSB) Direction() Direction {

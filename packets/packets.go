@@ -8,7 +8,7 @@ import (
 const ProtocolVersion = 755
 const MaxPacketSize = 128 * 1024
 const MaxPacketID = 256
-const CompressThreshold = 256
+const CompressThreshold = 512
 
 var GameVersion = ServerStatusVersion{"1.17", ProtocolVersion}
 
@@ -115,7 +115,7 @@ func newPlayPacket(packetId VarInt, direction Direction) (packet Packet) {
 			packet = new(ClientSettingsPacketSB)
 		case 0x06:
 			packet = new(TabCompletePacketSB)
-		case 0x0B:
+		case 0x0A:
 			packet = new(PluginMessagePacketSB)
 		}
 	} else {
