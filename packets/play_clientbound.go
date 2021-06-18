@@ -10,7 +10,7 @@ import (
 	"io/ioutil"
 )
 
-// > 0x3C RespawnPacketCB
+// > 0x3D RespawnPacketCB
 
 type RespawnPacketCB struct {
 	Dimension        nbt.TagCompound
@@ -24,7 +24,7 @@ type RespawnPacketCB struct {
 }
 
 func (packet *RespawnPacketCB) PacketID() VarInt {
-	return 0x3C
+	return 0x3D
 }
 
 func (packet *RespawnPacketCB) Direction() Direction {
@@ -455,7 +455,7 @@ func (packet *PlayerListItemPacketCB) Serialize(writer io.Writer) (err error) {
 	return
 }
 
-// 0x5D Player List Title (Header/Footer)
+// 0x5E Player List Title (Header/Footer)
 
 type PlayerListTitlePacketCB struct {
 	Header string `max_length:"1024"`
@@ -463,7 +463,7 @@ type PlayerListTitlePacketCB struct {
 }
 
 func (packet *PlayerListTitlePacketCB) PacketID() VarInt {
-	return 0x5D
+	return 0x5E
 }
 
 func (packet *PlayerListTitlePacketCB) Direction() Direction {
