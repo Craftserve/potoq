@@ -8,12 +8,13 @@ import (
 // > 0x05 ClientSettingsPacketSB
 
 type ClientSettingsPacketSB struct {
-	Locale       string `max_length:"16"`
-	ViewDistance byte
-	ChatMode     VarInt
-	ChatColors   bool
-	SkinParts    uint8
-	Hand         VarInt
+	Locale               string `max_length:"16"`
+	ViewDistance         byte
+	ChatMode             VarInt
+	ChatColors           bool
+	SkinParts            uint8
+	Hand                 VarInt
+	DisableTextFiltering bool
 }
 
 func (packet *ClientSettingsPacketSB) PacketID() VarInt {
@@ -54,7 +55,7 @@ func (packet *ClientStatusPacketSB) Serialize(writer io.Writer) (err error) {
 	return WriteMinecraftStruct(writer, packet)
 }
 
-// > 0x0B PluginMessagePacketSB
+// > 0x0A PluginMessagePacketSB
 
 type PluginMessagePacketSB struct {
 	Channel string `max_length:"64"`
@@ -62,7 +63,7 @@ type PluginMessagePacketSB struct {
 }
 
 func (packet *PluginMessagePacketSB) PacketID() VarInt {
-	return 0x0B
+	return 0x0A
 }
 
 func (packet *PluginMessagePacketSB) Direction() Direction {
