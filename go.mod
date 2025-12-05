@@ -12,10 +12,10 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.3 // indirect
 	github.com/mediocregopher/radix/v3 v3.5.2
 	github.com/poy/onpar v1.0.0 // indirect
-	github.com/sirupsen/logrus v1.5.0
+	github.com/sirupsen/logrus v1.8.3
 	github.com/ziutek/mymysql v1.5.4
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
 	gopkg.in/gorp.v2 v2.2.0
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7
-	gopkg.in/yaml.v2 v2.2.5
+	gopkg.in/yaml.v2 v2.2.8
 )
